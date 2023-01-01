@@ -73,6 +73,7 @@ fontpath: "/home/hoge/.local/share/fonts/Roboto Mono for Powerline.ttf"
 fontsize: 50
 $
 ```
+- `color0`: background color template
 - `color(1|2|3|4|5)`: color templates
 - `linethickness`: thickness of line
 - `(triangle|square|circle)thickness`: thickness of the shapes outline
