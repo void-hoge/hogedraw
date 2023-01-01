@@ -84,6 +84,8 @@ public:
 	}
 };
 
+using color_t = vec3<int>;
+
 template<typename T>
 std::ostream& operator <<(std::ostream& ost, const vec3<T> vec) {
 	vec.dump(ost);

@@ -12,7 +12,7 @@
 #include "vec.hpp"
 #include "lex.hpp"
 
-using color_t = vec3<int>;
+const double PI = 3.14159265;
 
 class object{
 protected:

@@ -1,5 +1,6 @@
 #include "vec.hpp"
 #include "object.hpp"
+
 #include <cmath>
 #include <iostream>
 
@@ -202,6 +203,62 @@ const vec2<int>& text::pos() const {
 }
 
 regpoly::regpoly(lex_t& lex) {
+	if (!lex.advance(std::regex("^\\{"))) {
+		throw std::runtime_error("syntax error at regpoly");
+	}
+
+	if (lex.check(std::regex("^color:\\((\\d+),(\\d+),(\\d+)\\),"))) {
+		this->color.x() = std::stoi(lex.match().str(1));
+		this->color.y() = std::stoi(lex.match().str(2));
+		this->color.z() = std::stoi(lex.match().str(3));
+		lex.advance();
+	}else {
+		throw std::runtime_error("syntax error at regpoly, while parsing the color");
+	}
+
+	if (lex.check(std::regex("^pos:\\((\\d+),(\\d+)\\),"))) {
+		this->pos.x() = std::stoi(lex.match().str(1));
+		this->pos.y() = std::stoi(lex.match().str(2));
+		lex.advance();
+	}else {
+		throw std::runtime_error("syntax error at regpoly, while parsing the pos");
+	}
+
+	if (lex.check(std::regex("^n:(\\d+),"))) {
+		this->n = std::stoi(lex.match().str(1));
+		lex.advance();
+	}else {
+		throw std::runtime_error("syntax error at regpoly, while parsing the n");
+	}
+
+	if (lex.check(std::regex("^size:(\\d+),"))) {
+		this->size = std::stoi(lex.match().str(1));
+		lex.advance();
+	}else {
+		throw std::runtime_error("syntax error at regpoly, while parsing the size");
+	}
+
+	if (lex.check(std::regex("^filled:(true|false),"))) {
+		if (lex.match().str(1) == "true") {
+			this->filled = true;
+		}else {
+			this->filled = false;
+		}
+		lex.advance();
+	}else {
+		throw std::runtime_error("syntax error at regpoly, while parsing the filled");
+	}
+
+	if (lex.check(std::regex("^thickness:(\\d+)"))) {
+		this->thickness = std::stoi(lex.match().str(1));
+		lex.advance();
+	}else {
+		throw std::runtime_error("syntax error at regpoly, while parsing the thickness");
+	}
+	
+	if (!lex.advance(std::regex("^\\}"))) {
+		throw "syntax error at regpoly";
+	}
 }
 
 regpoly::regpoly(const color_t& c, const vec2<int>& p, int n, int s, bool f, int t) {
@@ -220,12 +277,12 @@ void regpoly::render(const vec2<int>& windowsize) const {
 	glColor3d(this->color.x(), this->color.y(), this->color.z());
 	glLineWidth(this->thickness);
 	if (this->filled) {
-		glBegin(GL_POLYGON);
+		glBegin(GL_TRIANGLE_FAN);
 	}else {
 		glBegin(GL_LINE_LOOP);
 	}
-	double delta = (double)1/this->n;
-	for (double theta = delta/2; theta < 1.0f; theta+=delta) {
+	double delta = (double)(2*PI)/this->n;
+	for (double theta = delta/2; theta < PI*2; theta+=delta) {
 		float x = this->pos.x()-this->size*std::sin(theta);
 		float y = this->pos.y()+this->size*std::cos(theta);
 		glVertex2f(x, y);

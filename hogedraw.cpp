@@ -1,11 +1,20 @@
 #include "hogedraw.hpp"
-#include <iostream>
 
-hogedraw* create_hogedraw(lex_t& lex) {
+#include <iostream>
+#include <iomanip>
+
+hogedraw* create_hogedraw(lex_t& lex, option_t& option) {
 	if (lex.advance(std::regex("^root:"))) {
-		return new hogedraw(lex);
+		return new hogedraw(lex, option);
 	}else {
 		throw std::runtime_error("syntax error at create_hogedraw");
+	}
+}
+
+void hogedraw::init_font(const std::string fontpath) {
+	this->ftface = new FTPixmapFont(fontpath.c_str());
+	if (this->ftface->Error()) {
+		throw std::runtime_error("Failed to load the font.");
 	}
 }
 
@@ -29,15 +38,65 @@ void hogedraw::init_opengl() {
 	if (!this->renderer) {
 		throw std::runtime_error("Failed to init SDL renderer.");
 	}
-	this->ftface = new FTPixmapFont("/home/hoge/.local/share/fonts/Roboto Mono for Powerline.ttf");
-	if (this->ftface->Error()) {
-		throw std::runtime_error("Failed to load the font.");
-	}
 	glClearColor((float)this->background.x()/255,
 				 (float)this->background.y()/255,
 				 (float)this->background.z()/255,
 				 0.0);
 	glViewport(0, 0, this->windowsize.x(), this->windowsize.y());
+}
+
+void hogedraw::init_options(const option_t& option) {
+	this->linethickness = option.linethickness;
+	this->fontsize = option.fontsize;
+	this->trianglefill = option.trianglefill;
+	this->trianglesize = option.trianglesize;
+	this->trianglethickness = option.trianglethickness;
+	this->squarefill = option.squarefill;
+	this->squaresize = option.squaresize;
+	this->squarethickness = option.squarethickness;
+	this->circlefill = option.circlefill;
+	this->circlesize = option.circlesize;
+	this->circlethickness = option.circlethickness;
+	this->colors = option.colors;
+	this->background = this->colors.at(0);
+	this->base = this->colors.at(1);
+}
+
+std::string hogedraw::get_time_string() {
+	static const std::array<std::string, 12> monthstr = {
+		"Jan",
+		"Feb",
+		"Mar",
+		"Apr",
+		"May",
+		"June",
+		"July",
+		"Aug",
+		"Sept",
+		"Oct",
+		"Nov",
+		"Dec"
+	};
+	auto now = std::chrono::system_clock::now();
+	auto time = std::chrono::system_clock::to_time_t(now);
+	auto timeptr = std::localtime(&time);
+	auto year = timeptr->tm_year+1900;
+	auto month = monthstr[timeptr->tm_mon];
+	auto day = timeptr->tm_mday;
+	auto hour = timeptr->tm_hour;
+	auto minute = timeptr->tm_min;
+	auto sec = timeptr->tm_sec;
+	auto milli = std::chrono::duration_cast<std::chrono::milliseconds>
+		(now.time_since_epoch()).count()%1000;
+	std::stringstream sst;
+	sst << year << "-"
+		<< month << "-"
+		<< std::setfill('0') << std::setw(2) << std::right << day << "-"
+		<< std::setfill('0') << std::setw(2) << std::right << hour << ":"
+		<< std::setfill('0') << std::setw(2) << std::right << minute << ":"
+		<< std::setfill('0') << std::setw(2) << std::right << sec << ":"
+		<< std::setfill('0') << std::setw(3) << std::right << milli;
+	return sst.str();
 }
 
 void hogedraw::render() const {
@@ -53,43 +112,70 @@ void hogedraw::render() const {
 	SDL_GL_SwapWindow(this->window);
 }
 
-void hogedraw::dump(std::ostream& ost) const {
-	if (this->current_line != nullptr) {
-		this->canvases.at(this->current_canvas_idx)->push_back((object*)this->current_line);
-	}
-	if (this->current_text != nullptr) {
-		this->canvases.at(this->current_canvas_idx)->push_back((object*)this->current_text);
-	}
+void hogedraw::dump(std::ostream& ost) {
+	this->push_current_objects();
 	ost << "root:{"
 		<< this->canvases
 		<< "}";
+}
+
+void hogedraw::push_current_line() {
+	if (this->current_line != nullptr) {
+		this->canvases.at(this->current_canvas_idx)->push_back((object*)this->current_line);
+		this->current_line = nullptr;
+	}
+}
+
+void hogedraw::push_current_text() {
+	if (this->current_text != nullptr) {
+		this->canvases.at(this->current_canvas_idx)->push_back((object*)this->current_text);
+		this->current_text = nullptr;
+	}
+}
+
+void hogedraw::push_current_objects() {
+	this->push_current_line();
+	this->push_current_text();
+}
+
+bool hogedraw::export_window_as_png(std::string filename) {
+	auto surface = SDL_GetWindowSurface(this->window);
+	if (surface == nullptr) {
+		throw std::runtime_error("failed to get window surface");
+	}
+	SDL_RenderReadPixels(this->renderer, NULL, SDL_GetWindowPixelFormat(this->window), surface->pixels, surface->pitch);
+	auto retval = IMG_SavePNG(surface, filename.c_str());
+	SDL_FreeSurface(surface);
+	return retval == 0;
+}
+
+bool hogedraw::export_project_as_text_file(std::string filename) {
+	std::ofstream ofst(filename);
+	if (ofst.is_open()) {
+		this->dump(ofst);
+		ofst.close();
+		return true;
+	}
+	return false;
 }
 
 void hogedraw::push_canvas() {
 	this->canvases.push_back(new canvas());
 }
 
+vec2<int> hogedraw::get_mouse_pos() {
+	vec2<int> pos;
+	SDL_GetMouseState(&(pos.x()), &(pos.y()));
+	return pos;
+}
+
 void hogedraw::move_to_next_canvas() {
-	if (this->current_text != nullptr) {
-		this->canvases.at(this->current_canvas_idx)->push_back((object*)this->current_text);
-		this->current_text = nullptr;
-	}
-	if (this->current_line != nullptr) {
-		this->canvases.at(this->current_canvas_idx)->push_back((object*)this->current_line);
-		this->current_line = nullptr;
-	}
+	this->push_current_objects();
 	this->current_canvas_idx = (this->current_canvas_idx+1)%this->canvases.size();
 }
 
 void hogedraw::move_to_back_canvas() {
-	if (this->current_text != nullptr) {
-		this->canvases.at(this->current_canvas_idx)->push_back((object*)this->current_text);
-		this->current_text = nullptr;
-	}
-	if (this->current_line != nullptr) {
-		this->canvases.at(this->current_canvas_idx)->push_back((object*)this->current_line);
-		this->current_line = nullptr;
-	}
+	this->push_current_objects();
 	this->current_canvas_idx = this->canvases.size()-1;
 }
 
@@ -112,19 +198,14 @@ void hogedraw::handle_mouse_press(const SDL_Event& event) {
 			this->canvases.at(this->current_canvas_idx)->push_back((object*)this->current_line);
 			this->current_line = nullptr;
 		}
-		this->current_line = new line(this->base);
+		this->current_line = new line(this->base, this->linethickness);
 		this->current_line->push_back(vec2<int>(event.button.x, event.button.y));
 	}
 }
 
 void hogedraw::handle_mouse_release(const SDL_Event& event) {
 	if (event.button.button == SDL_BUTTON_LEFT) {
-		if (this->current_line == nullptr) {
-			return;
-		}else {
-			this->canvases.at(this->current_canvas_idx)->push_back((object*)this->current_line);
-			this->current_line = nullptr;
-		}
+		this->push_current_line();
 	}
 }
 
@@ -137,21 +218,17 @@ void hogedraw::handle_window_events(const SDL_Event& event) {
 }
 
 void hogedraw::handle_text_input_event(const SDL_Event& event) {
-	vec2<int> pos;
-	SDL_GetMouseState(&(pos.x()), &(pos.y()));
-	if (this->current_line != nullptr) {
-		this->canvases.at(this->current_canvas_idx)->push_back((object*)this->current_line);
-		this->current_line = nullptr;
-	}
+	vec2<int> pos = this->get_mouse_pos();
+	this->push_current_line();
 	if (this->current_text == nullptr) {
-		this->current_text = new text(this->base, pos, this->ftface, 100);
+		this->current_text = new text(this->base, pos, this->ftface, this->fontsize);
 		this->current_text->push_back(event.text.text[0]);
 	}else {
 		if (pos == this->current_text->pos()) {
 			this->current_text->push_back(event.text.text[0]);
 		}else {
 			this->canvases.at(this->current_canvas_idx)->push_back((object*)this->current_text);
-			this->current_text = new text(this->base, pos, this->ftface, 100);
+			this->current_text = new text(this->base, pos, this->ftface, this->fontsize);
 			this->current_text->push_back(event.text.text[0]);
 		}
 	}
@@ -169,7 +246,43 @@ bool hogedraw::handle_key_events(const SDL_Event& event) {
 			this->push_canvas();
 			this->move_to_back_canvas();
 		}else if (keycode == SDLK_s) {
-			this->dump(std::cout);
+			std::string filename = "project"+this->get_time_string()+".txt";
+			this->export_project_as_text_file(filename);
+		}else if (keycode == SDLK_p){
+			std::string filename = "drawing"+this->get_time_string()+".png";
+			this->export_window_as_png(filename);
+		}else if (keycode == SDLK_r) {
+			// triangle
+			auto pos = this->get_mouse_pos();
+			this->canvases.at(this->current_canvas_idx)
+				->push_back((object*)new regpoly(
+								this->base,
+								pos,
+								3,
+								this->trianglesize,
+								this->trianglefill,
+								this->trianglethickness));
+		}else if (keycode == SDLK_f) {
+			// rectangle
+			auto pos = this->get_mouse_pos();
+			this->canvases.at(this->current_canvas_idx)
+				->push_back((object*)new regpoly(
+								this->base,
+								pos, 4,
+								this->squaresize,
+								this->squarefill,
+								this->squarethickness));
+		}else if (keycode == SDLK_v) {
+			// circle
+			auto pos = this->get_mouse_pos();
+			this->canvases.at(this->current_canvas_idx)
+				->push_back((object*)new regpoly(
+								this->base,
+								pos,
+								16,
+								this->circlesize,
+								this->circlefill,
+								this->circlethickness));
 		}
 	} else if (mod == 0) {
 		if (keycode == SDLK_BACKSPACE) {
@@ -184,7 +297,23 @@ bool hogedraw::handle_key_events(const SDL_Event& event) {
 			}else {
 				this->canvases.at(this->current_canvas_idx)->undo();
 			}
+		}else if (keycode == SDLK_F1) {
+			this->push_current_objects();
+			this->base = this->colors.at(1);
+		}else if (keycode == SDLK_F2) {
+			this->push_current_objects();
+			this->base = this->colors.at(2);
+		}else if (keycode == SDLK_F3) {
+			this->push_current_objects();
+			this->base = this->colors.at(3);
+		}else if (keycode == SDLK_F4) {
+			this->push_current_objects();
+			this->base = this->colors.at(4);
+		}else if (keycode == SDLK_F5) {
+			this->push_current_objects();
+			this->base = this->colors.at(5);
 		}
+
 	}
 	return true;
 }
@@ -195,10 +324,22 @@ hogedraw::hogedraw() {
 	this->background = this->colors.at(0);
 	this->base = this->colors.at(1);
 	this->init_opengl();
+	this->init_font();
 	this->canvases.push_back(new canvas());
 	this->current_canvas_idx = 0;
 	this->current_line = nullptr;
 	this->current_text = nullptr;
+	this->linethickness = 2;
+	this->trianglefill = false;
+	this->trianglesize = 50;
+	this->trianglethickness = 2;
+	this->squarefill = false;
+	this->squaresize = 50;
+	this->squarethickness = 2;
+	this->circlefill = false;
+	this->circlesize = 50;
+	this->circlethickness = 2;
+	this->fontsize = 50;
 }
 
 hogedraw::hogedraw(lex_t& lex) {
@@ -207,6 +348,7 @@ hogedraw::hogedraw(lex_t& lex) {
 	this->background = this->colors.at(0);
 	this->base = this->colors.at(1);
 	this->init_opengl();
+	this->init_font();
 	if (!lex.advance(std::regex("\\{"))) {
 		throw std::runtime_error("syntax error at hogedraw");
 	}
@@ -223,7 +365,51 @@ hogedraw::hogedraw(lex_t& lex) {
 	this->current_canvas_idx = 0;
 	this->current_line = nullptr;
 	this->current_text = nullptr;
+	this->trianglefill = false;
+	this->trianglesize = 50;
+	this->trianglethickness = 2;
+	this->squarefill = false;
+	this->squaresize = 50;
+	this->squarethickness = 2;
+	this->circlefill = false;
+	this->circlesize = 50;
+	this->circlethickness = 2;
+	this->fontsize = 50;
 }
+
+hogedraw::hogedraw(const option_t& option) {
+	this->init_options(option);
+	this->init_opengl();
+	this->init_font(option.fontpath);
+	this->canvases.push_back(new canvas());
+	this->current_canvas_idx = 0;
+	this->current_line = nullptr;
+	this->current_text = nullptr;
+}
+
+hogedraw::hogedraw(lex_t& lex, const option_t& option) {
+	this->init_options(option);
+	this->init_opengl();
+	this->init_font(option.fontpath);
+	if (!lex.advance(std::regex("\\{"))) {
+		throw std::runtime_error("syntax error at hogedraw");
+	}
+	while (lex.check(std::regex("^canvas:"))) {
+		this->canvases.push_back(create_canvas(lex, this->ftface));
+		lex.advance(std::regex("^,"));
+	}
+	if (!lex.advance(std::regex("^\\}"))) {
+		throw std::runtime_error("syntax error at hogedraw");
+	}
+	if (this->canvases.size() == 0) {
+		this->canvases.push_back(new canvas());
+	}
+	this->current_canvas_idx = 0;
+	this->current_line = nullptr;
+	this->current_text = nullptr;
+
+}
+
 
 hogedraw::~hogedraw() {
 	for (auto canv: this->canvases) {
