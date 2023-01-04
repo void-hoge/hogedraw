@@ -1,0 +1,6 @@
+*.out
+*.o
+hogedraw
+*~
+note
+test*
