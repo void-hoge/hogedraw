@@ -30,21 +30,22 @@ $
 - Draw line by dragging the mouse pointer.
 - Draw string where the mouse pointer is by type the keyboard.
 
-| key        | action                    |
-|------------|---------------------------|
-| Ctrl + q   | Quit                      |
-| Ctrl + r   | Draw triangle             |
-| Ctrl + f   | Draw square               |
-| Ctrl + v   | Draw circle               |
-| F1         | Set to use color 1        |
-| F2         | Set to use color 2        |
-| F3         | Set to use color 3        |
-| F4         | Set to use color 4        |
-| F5         | Set to use color 5        |
-| Ctrl + t   | Push canvas to the end    |
-| Ctrl + tab | Switch to next canvas     |
-| Ctrl + s   | Save project as text file |
-| Ctrl + p   | Save canvas as png file   |
+| key                | action                    |
+|--------------------|---------------------------|
+| Ctrl + q           | Quit                      |
+| Ctrl + r           | Draw triangle             |
+| Ctrl + f           | Draw square               |
+| Ctrl + v           | Draw circle               |
+| F1                 | Set to use color 1        |
+| F2                 | Set to use color 2        |
+| F3                 | Set to use color 3        |
+| F4                 | Set to use color 4        |
+| F5                 | Set to use color 5        |
+| Ctrl + t           | Push canvas to the end    |
+| Ctrl + tab         | Switch to next canvas     |
+| Ctrl + Shift + tab | Switch to previous canvas |
+| Ctrl + s           | Save project as text file |
+| Ctrl + p           | Save canvas as png file   |
 
 ## .hogedrawrc
 - Configure hogedraw by placing setting file in the HOME directory.
