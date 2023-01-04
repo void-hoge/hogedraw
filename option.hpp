@@ -10,7 +10,7 @@
 class option_t {
 private:
 	const std::vector<std::string> tokens = {
-		"color0", 
+		"color0",
 		"color1",
 		"color2",
 		"color3",

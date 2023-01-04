@@ -1,4 +1,5 @@
 #include "hogedraw.hpp"
+#include "util.hpp"
 
 #include <iostream>
 #include <iomanip>
@@ -112,6 +113,20 @@ void hogedraw::render() const {
 	SDL_GL_SwapWindow(this->window);
 }
 
+void hogedraw::dump(std::ostream& ost, int tablevel) {
+	this->push_current_objects();
+	ost << tab*tablevel << "root:{" << std::endl;
+	if (this->canvases.size() > 0) {
+		for (std::size_t i = 0; i < this->canvases.size()-1; i++) {
+			this->canvases.at(i)->dump(ost, tablevel+1);
+			ost << "," << std::endl;
+		}
+		this->canvases.back()->dump(ost, tablevel+1);
+		ost << std::endl;
+	}
+	ost << tab*tablevel << "}";
+}
+
 void hogedraw::dump(std::ostream& ost) {
 	this->push_current_objects();
 	ost << "root:{"
@@ -152,7 +167,8 @@ bool hogedraw::export_window_as_png(std::string filename) {
 bool hogedraw::export_project_as_text_file(std::string filename) {
 	std::ofstream ofst(filename);
 	if (ofst.is_open()) {
-		this->dump(ofst);
+		this->dump(ofst, 0);
+		ofst << std::endl;
 		ofst.close();
 		return true;
 	}

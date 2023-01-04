@@ -14,6 +14,7 @@ int main(const int argc, const char* argv[]) {
 		while (std::getline(ifs, tmp)) {
 			lines.push_back(tmp);
 		}
+		ifs.close();
 		option = new option_t(lines);
 	}else {
 		option = new option_t();
@@ -28,6 +29,7 @@ int main(const int argc, const char* argv[]) {
 			while (std::getline(ifs, tmp)) {
 				savecode += tmp;
 			}
+			ifs.close();
 			lex_t lex(savecode);
 			hoge = create_hogedraw(lex, *option);
 		}else {

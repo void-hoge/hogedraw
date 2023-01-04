@@ -1,4 +1,5 @@
 #include "canvas.hpp"
+#include "util.hpp"
 #include <iostream>
 
 canvas* create_canvas(lex_t& lex, FTPixmapFont* f) {
@@ -54,6 +55,19 @@ void canvas::dump(std::ostream& ost) const {
 	ost << "canvas:{"
 		<< this->objects
 		<< "}";
+}
+
+void canvas::dump(std::ostream& ost, int tablevel) const {
+	ost << tab*tablevel << "canvas:{" << std::endl;
+	if (this->objects.size() > 0) {
+		for (std::size_t i = 0; i < this->objects.size()-1; i++) {
+			this->objects.at(i)->dump(ost, tablevel+1);
+			ost << "," << std::endl;
+		}
+		this->objects.back()->dump(ost, tablevel+1);
+		ost << std::endl;
+	}
+	ost << tab*tablevel << "}";
 }
 
 std::ostream& operator <<(std::ostream& ost, const canvas* canv) {

@@ -12,8 +12,8 @@ STD = -std=c++11
 CFLAGS = $(STD) $(RELEASE) $(SDLFLAGS) $(SDLLIBS) $(GLLIBS) $(GLUTFLAGS) $(GLUTLIBS) $(FTGLFLAGS) $(FTGLLIBS) $(SDLIMAGELIBS)
 PROG = hogedraw
 
-$(PROG): main.o hogedraw.o object.o canvas.o lex.o option.o
-	$(CC) main.o hogedraw.o object.o canvas.o lex.o option.o $(CFLAGS) -o $(PROG)
+$(PROG): main.o hogedraw.o object.o canvas.o lex.o option.o vec.o
+	$(CC) main.o hogedraw.o object.o canvas.o lex.o option.o vec.o $(CFLAGS) -o $(PROG)
 
 main.o: main.cpp
 	$(CC) main.cpp -c $(CFLAGS) -o main.o
@@ -32,6 +32,9 @@ lex.o: lex.cpp
 
 option.o: option.cpp
 	$(CC) option.cpp -c $(STD) $(RELEASE) -o option.o
+
+vec.o: vec.cpp
+	$(CC) vec.cpp -c $(STD) $(RELEASE) -o vec.o
 
 clean:
 	rm $(PROG) *.o *~ *.out

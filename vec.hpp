@@ -4,6 +4,8 @@
 #include <ostream>
 #include <vector>
 
+#include "lex.hpp"
+
 template<typename T>
 class vec2 {
 private:
@@ -13,6 +15,7 @@ public:
 	vec2(): x_(0), y_(0){}
 	vec2(T x, T y): x_(x), y_(y) {}
 	vec2(const vec2<T>& vec): x_(vec.x()), y_(vec.y()) {}
+	vec2(lex_t& lex);
 	T& x() {
 		return this->x_;
 	}
@@ -55,6 +58,7 @@ public:
 	vec3(): x_(0), y_(0), z_(0){}
 	vec3(T x, T y, T z): x_(x), y_(y), z_(z) {}
 	vec3(const vec3<T>& vec): x_(vec.x()), y_(vec.y()), z_(vec.z()) {}
+	vec3(lex_t& lex);
 	T& x() {
 		return this->x_;
 	}

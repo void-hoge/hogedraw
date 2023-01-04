@@ -1,5 +1,6 @@
 #include "vec.hpp"
 #include "object.hpp"
+#include "util.hpp"
 
 #include <cmath>
 #include <iostream>
@@ -105,6 +106,14 @@ void line::dump(std::ostream& ost) const {
 		<< "}";
 }
 
+void line::dump(std::ostream& ost, int tablevel) const {
+	ost << tab*tablevel << "line:{" << std::endl
+		<< tab*(tablevel+1) << "color:" << this->color << "," << std::endl
+		<< tab*(tablevel+1) << "thickness:" << this->thickness << "," << std::endl
+		<< tab*(tablevel+1) << "vertices:{" << this->vertices << "}" << std::endl
+		<< tab*tablevel << "}";
+}
+
 void line::push_back(const vec2<int>& pos) {
 	this->vertices.push_back(pos);
 }
@@ -196,6 +205,16 @@ void text::dump(std::ostream& ost) const {
 		<< "len:" << this->str.size() << ","
 		<< "str:\"" << this->str << "\""
 		<< "}";
+}
+
+void text::dump(std::ostream& ost, int tablevel) const {
+	ost << tab*tablevel << "text:{" << std::endl
+		<< tab*(tablevel+1) << "color:" << this->color << "," << std::endl
+		<< tab*(tablevel+1) << "pos:" << this->pos_ << "," << std::endl
+		<< tab*(tablevel+1) << "size:" << this->size << "," << std::endl
+		<< tab*(tablevel+1) << "len:" << this->str.size() << "," << std::endl
+		<< tab*(tablevel+1) << "str:\"" << this->str << "\"" << std::endl
+		<< tab*tablevel << "}";
 }
 
 const vec2<int>& text::pos() const {
@@ -305,4 +324,16 @@ void regpoly::dump(std::ostream& ost) const {
 		<< "filled:" << this->filled << ","
 		<< "thickness:" << this->thickness
 		<< "}";
+}
+
+void regpoly::dump(std::ostream& ost, int tablevel) const {
+	ost << std::boolalpha
+		<< tab*tablevel << "regpoly:{" << std::endl
+		<< tab*(tablevel+1) << "color:" << this->color << "," << std::endl
+		<< tab*(tablevel+1) << "pos:" << this->pos << "," << std::endl
+		<< tab*(tablevel+1) << "n:" << this->n << "," << std::endl
+		<< tab*(tablevel+1) << "size:" << this->size << "," << std::endl
+		<< tab*(tablevel+1) << "filled:" << this->filled << "," << std::endl
+		<< tab*(tablevel+1) << "thickness:" << this->thickness << std::endl
+		<< tab*tablevel << "}";
 }

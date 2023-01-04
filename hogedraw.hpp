@@ -59,6 +59,7 @@ private:
 	bool export_project_as_text_file(std::string filename);
 
 	void render() const;
+	void dump(std::ostream& ost, int tablevel);
 	void dump(std::ostream& ost);
 
 	void push_current_line();

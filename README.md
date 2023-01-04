@@ -15,13 +15,14 @@
 ## BUILD
 ```
 $ make
-c++ main.cpp -c -std=c++11 -O3 -I/usr/include/SDL2 -D_REENTRANT  -lSDL2  -lSDL2_image -lGL  -DFREEGLUT_STATIC  -lglut  -I/usr/include/FTGL -I/usr/include/freetype2 -I/usr/include/libpng16  -lftgl  -lSDL2_image -lSDL2  -o main.o
-c++ hogedraw.cpp -c -std=c++11 -O3 -I/usr/include/SDL2 -D_REENTRANT  -lSDL2  -lSDL2_image -lGL  -DFREEGLUT_STATIC  -lglut  -I/usr/include/FTGL -I/usr/include/freetype2 -I/usr/include/libpng16  -lftgl  -lSDL2_image -lSDL2  -o hogedraw.o
-c++ object.cpp -c -std=c++11 -O3 -I/usr/include/SDL2 -D_REENTRANT  -lSDL2  -lSDL2_image -lGL  -DFREEGLUT_STATIC  -lglut  -I/usr/include/FTGL -I/usr/include/freetype2 -I/usr/include/libpng16  -lftgl  -lSDL2_image -lSDL2  -o object.o
-c++ canvas.cpp -c -std=c++11 -O3 -I/usr/include/SDL2 -D_REENTRANT  -lSDL2  -lSDL2_image -lGL  -DFREEGLUT_STATIC  -lglut  -I/usr/include/FTGL -I/usr/include/freetype2 -I/usr/include/libpng16  -lftgl  -lSDL2_image -lSDL2  -o canvas.o
-c++ lex.cpp -c -std=c++11 -O3 -o lex.o
-c++ option.cpp -c -std=c++11 -O3 -o option.o
-c++ main.o hogedraw.o object.o canvas.o lex.o option.o -std=c++11 -O3 -I/usr/include/SDL2 -D_REENTRANT  -lSDL2  -lSDL2_image -lGL  -DFREEGLUT_STATIC  -lglut  -I/usr/include/FTGL -I/usr/include/freetype2 -I/usr/include/libpng16  -lftgl  -lSDL2_image -lSDL2  -o hogedraw
+c++ main.cpp -c -std=c++11 -O3 -mtune=native -march=native -I/usr/include/SDL2 -D_REENTRANT  -lSDL2  -lSDL2_image -lGL  -DFREEGLUT_STATIC  -lglut  -I/usr/include/FTGL -I/usr/include/freetype2 -I/usr/include/libpng16  -lftgl  -lSDL2_image -lSDL2  -o main.o
+c++ hogedraw.cpp -c -std=c++11 -O3 -mtune=native -march=native -I/usr/include/SDL2 -D_REENTRANT  -lSDL2  -lSDL2_image -lGL  -DFREEGLUT_STATIC  -lglut  -I/usr/include/FTGL -I/usr/include/freetype2 -I/usr/include/libpng16  -lftgl  -lSDL2_image -lSDL2  -o hogedraw.o
+c++ object.cpp -c -std=c++11 -O3 -mtune=native -march=native -I/usr/include/SDL2 -D_REENTRANT  -lSDL2  -lSDL2_image -lGL  -DFREEGLUT_STATIC  -lglut  -I/usr/include/FTGL -I/usr/include/freetype2 -I/usr/include/libpng16  -lftgl  -lSDL2_image -lSDL2  -o object.o
+c++ canvas.cpp -c -std=c++11 -O3 -mtune=native -march=native -I/usr/include/SDL2 -D_REENTRANT  -lSDL2  -lSDL2_image -lGL  -DFREEGLUT_STATIC  -lglut  -I/usr/include/FTGL -I/usr/include/freetype2 -I/usr/include/libpng16  -lftgl  -lSDL2_image -lSDL2  -o canvas.o
+c++ lex.cpp -c -std=c++11 -O3 -mtune=native -march=native -o lex.o
+c++ option.cpp -c -std=c++11 -O3 -mtune=native -march=native -o option.o
+c++ vec.cpp -c -std=c++11 -O3 -mtune=native -march=native -o vec.o
+c++ main.o hogedraw.o object.o canvas.o lex.o option.o vec.o -std=c++11 -O3 -mtune=native -march=native -I/usr/include/SDL2 -D_REENTRANT  -lSDL2  -lSDL2_image -lGL  -DFREEGLUT_STATIC  -lglut  -I/usr/include/FTGL -I/usr/include/freetype2 -I/usr/include/libpng16  -lftgl  -lSDL2_image -lSDL2  -o hogedraw
 $
 ```
 
@@ -45,12 +46,11 @@ $
 | Ctrl + s   | Save project as text file |
 | Ctrl + p   | Save canvas as png file   |
 
-
 ## .hogedrawrc
 - Configure hogedraw by placing setting file in the HOME directory.
 
 ```
-$ ls $HOME | grep .hogedrawrc
+$ la $HOME | grep .hogedrawrc
 -rw-r--r--  1 hoge hoge  377 Jan  2 00:15 .hogedrawrc
 $ cat $HOME/.hogedrawrc
 color0: (0,0,0)
@@ -78,9 +78,15 @@ $
 - `linethickness`: thickness of line
 - `(triangle|square|circle)thickness`: thickness of the shapes outline
 - `(triangle|square|circle)fill`: whether to fill the shapes
-- `(triangle|square|circle)size`: size(distance between pointer and vertices) of the shapes
+- `(triangle|square|circle)size`: size(distance between the pointer and vertices) of the shapes
 - `fontpath`: the path to a truetype font
 - `fontsize`: size of text
 
 ## OPTION
-- `hogedraw <project file>`: load project from the `<project file>`.
+- `hogedraw <project file>`: load project from `<project file>`.
+
+## Author
+- Mugi Noda(void-hoge)
+
+## LICENSE
+- GPLv3

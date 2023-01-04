@@ -8,6 +8,7 @@
 bool is_space(const char c);
 
 std::string operator*(std::string str, std::size_t n);
+
 class lex_t {
 private:
 	std::string code_;
@@ -24,7 +25,11 @@ public:
 	}
 	const std::smatch& match()const {
 		return match_;
-	}	
+	}
 };
+
+bool parsebool(lex_t& lex);
+int parseint(lex_t& lex);
+std::string parsestring(lex_t& lex);
 
 #endif // include guard of LEX_HPP

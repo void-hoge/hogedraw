@@ -25,6 +25,7 @@ public:
 	void push_back(object* obj);
 	void undo();
 	void dump(std::ostream& ost) const;
+	void dump(std::ostream& ost, int tablevel) const;
 };
 
 canvas* create_canvas(lex_t& lex, FTPixmapFont* f);

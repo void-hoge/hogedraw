@@ -21,6 +21,7 @@ public:
 	virtual void render(const vec2<int>& windowsize) const = 0;
 	virtual bool undo() = 0;
 	virtual void dump(std::ostream& ost) const = 0;
+	virtual void dump(std::ostream& ost, int tablevel) const = 0;
 };
 
 object* create_object(lex_t& lex, FTPixmapFont* f);
@@ -38,6 +39,7 @@ public:
 	void render(const vec2<int>& windowsize) const;
 	bool undo();
 	void dump(std::ostream& ost) const;
+	void dump(std::ostream& ost, int tablevel) const;
 	void push_back(const vec2<int>& pos);
 };
 
@@ -54,6 +56,7 @@ public:
 	bool undo();
 	void push_back(const char ch);
 	void dump(std::ostream& ost) const;
+	void dump(std::ostream& ost, int tablevel) const;
 	const vec2<int>& pos() const;
 };
 
@@ -70,6 +73,7 @@ public:
 	void render(const vec2<int>& windowsize) const;
 	bool undo();
 	void dump(std::ostream& ost) const;
+	void dump(std::ostream& ost, int tablevel) const;
 };
 
 #endif // include guard of OBJECT_HPP
