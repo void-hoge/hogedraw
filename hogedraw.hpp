@@ -69,7 +69,7 @@ private:
 	void push_current_objects();
 
 	void push_canvas();
-	void move_to_next_canvas();
+	void switch_canvas(int num);
 	void move_to_back_canvas();
 
 	vec2<int> get_mouse_pos();

@@ -186,9 +186,9 @@ vec2<int> hogedraw::get_mouse_pos() {
 	return pos;
 }
 
-void hogedraw::move_to_next_canvas() {
+void hogedraw::switch_canvas(int num) {
 	this->push_current_objects();
-	this->current_canvas_idx = (this->current_canvas_idx+1)%this->canvases.size();
+	this->current_canvas_idx = (this->current_canvas_idx+num)%this->canvases.size();
 }
 
 void hogedraw::move_to_back_canvas() {
@@ -257,12 +257,15 @@ void hogedraw::handle_text_input_event(const SDL_Event& event) {
 bool hogedraw::handle_key_events(const SDL_Event& event) {
 	auto mod = event.key.keysym.mod;
 	auto keycode = event.key.keysym.sym;
-	if (mod & KMOD_CTRL) {
+	static const auto ctrl_mask = KMOD_LCTRL | KMOD_RCTRL | KMOD_CTRL;
+	static const auto shift_mask = KMOD_LSHIFT | KMOD_RSHIFT | KMOD_SHIFT;
+	static const auto alt_mask = KMOD_LALT | KMOD_RALT | KMOD_ALT;
+	if ((mod & ctrl_mask) && !(mod & shift_mask) && !(mod & alt_mask)) {
 		if (keycode == SDLK_q) {
 			return false;
 		}else if (keycode == SDLK_TAB) {
 			this->updated = true;
-			this->move_to_next_canvas();
+			this->switch_canvas(1);
 		}else if (keycode == SDLK_t) {
 			this->updated = true;
 			this->push_canvas();
@@ -309,7 +312,13 @@ bool hogedraw::handle_key_events(const SDL_Event& event) {
 								this->circlefill,
 								this->circlethickness));
 		}
-	} else if (mod == 0) {
+		
+	}else if ((mod & ctrl_mask) && (mod & shift_mask) && !(mod & alt_mask)) {
+		if (keycode == SDLK_TAB) {
+			this->updated = true;
+			this->switch_canvas(-1);
+		}
+	}else if (mod == 0) {
 		if (keycode == SDLK_BACKSPACE) {
 			this->updated = true;
 		    if (this->current_text != nullptr) {
