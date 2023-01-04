@@ -5,7 +5,7 @@
 - This project file is availabe at [here](./welcome.txt).
 
 ## REQUIREMENTS
-- A compiler that's supports C++11 or higher.
+- A compiler that supports C++11 or higher.
 - libsdl2-dev
 - libglut-dev
 - libgl-dev
