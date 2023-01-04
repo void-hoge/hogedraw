@@ -28,7 +28,7 @@ $
 
 ## USAGE
 - Draw line by dragging the mouse pointer.
-- Draw string where the mouse pointer is by type the keyboard.
+- Draw string where the mouse pointer is by typing on the keyboard.
 
 | key                | action                    |
 |--------------------|---------------------------|
