@@ -50,6 +50,8 @@ private:
 	line* current_line;
 	text* current_text;
 
+	bool updated;
+
 	void init_font(const std::string fontpath="/usr/share/fonts/truetype/freefont/FreeMono.ttf");
 	void init_opengl();
 	void init_options(const option_t& option);

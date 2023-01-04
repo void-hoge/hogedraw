@@ -61,6 +61,7 @@ void hogedraw::init_options(const option_t& option) {
 	this->colors = option.colors;
 	this->background = this->colors.at(0);
 	this->base = this->colors.at(1);
+	this->updated = true;
 }
 
 std::string hogedraw::get_time_string() {
@@ -195,13 +196,13 @@ void hogedraw::move_to_back_canvas() {
 	this->current_canvas_idx = this->canvases.size()-1;
 }
 
-
 void hogedraw::handle_mouse_motion(const SDL_Event& event) {
 	if (this->current_text != nullptr) {
 		this->canvases.at(this->current_canvas_idx)->push_back((object*)this->current_text);
 		this->current_text = nullptr;
 	}
-	if (event.motion.state | SDL_BUTTON_LMASK) {
+	if (event.motion.state & SDL_BUTTON_LMASK) {
+		this->updated = true;
 		if (this->current_line != nullptr) {
 			this->current_line->push_back(vec2<int>(event.motion.x, event.motion.y));
 		}
@@ -210,6 +211,7 @@ void hogedraw::handle_mouse_motion(const SDL_Event& event) {
 
 void hogedraw::handle_mouse_press(const SDL_Event& event) {
 	if (event.button.button == SDL_BUTTON_LEFT) {
+		this->updated = true;
 		if (this->current_line != nullptr) {
 			this->canvases.at(this->current_canvas_idx)->push_back((object*)this->current_line);
 			this->current_line = nullptr;
@@ -227,6 +229,7 @@ void hogedraw::handle_mouse_release(const SDL_Event& event) {
 
 void hogedraw::handle_window_events(const SDL_Event& event) {
 	if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
+		this->updated = true;
 		this->windowsize.x() = event.window.data1;
 		this->windowsize.y() = event.window.data2;
 		glViewport(0, 0, this->windowsize.x(), this->windowsize.y());
@@ -234,6 +237,7 @@ void hogedraw::handle_window_events(const SDL_Event& event) {
 }
 
 void hogedraw::handle_text_input_event(const SDL_Event& event) {
+	this->updated = true;
 	vec2<int> pos = this->get_mouse_pos();
 	this->push_current_line();
 	if (this->current_text == nullptr) {
@@ -257,8 +261,10 @@ bool hogedraw::handle_key_events(const SDL_Event& event) {
 		if (keycode == SDLK_q) {
 			return false;
 		}else if (keycode == SDLK_TAB) {
+			this->updated = true;
 			this->move_to_next_canvas();
 		}else if (keycode == SDLK_t) {
+			this->updated = true;
 			this->push_canvas();
 			this->move_to_back_canvas();
 		}else if (keycode == SDLK_s) {
@@ -269,6 +275,7 @@ bool hogedraw::handle_key_events(const SDL_Event& event) {
 			this->export_window_as_png(filename);
 		}else if (keycode == SDLK_r) {
 			// triangle
+			this->updated = true;
 			auto pos = this->get_mouse_pos();
 			this->canvases.at(this->current_canvas_idx)
 				->push_back((object*)new regpoly(
@@ -280,6 +287,7 @@ bool hogedraw::handle_key_events(const SDL_Event& event) {
 								this->trianglethickness));
 		}else if (keycode == SDLK_f) {
 			// rectangle
+			this->updated = true;
 			auto pos = this->get_mouse_pos();
 			this->canvases.at(this->current_canvas_idx)
 				->push_back((object*)new regpoly(
@@ -290,6 +298,7 @@ bool hogedraw::handle_key_events(const SDL_Event& event) {
 								this->squarethickness));
 		}else if (keycode == SDLK_v) {
 			// circle
+			this->updated = true;
 			auto pos = this->get_mouse_pos();
 			this->canvases.at(this->current_canvas_idx)
 				->push_back((object*)new regpoly(
@@ -302,6 +311,7 @@ bool hogedraw::handle_key_events(const SDL_Event& event) {
 		}
 	} else if (mod == 0) {
 		if (keycode == SDLK_BACKSPACE) {
+			this->updated = true;
 		    if (this->current_text != nullptr) {
 				if (!this->current_text->undo()) {
 					delete this->current_text;
@@ -463,6 +473,9 @@ void hogedraw::mainloop() {
 				return;
 			}
 		}
-		this->render();
+		if (this->updated) {
+			this->render();
+			this->updated = false;
+		}
 	}
 }
