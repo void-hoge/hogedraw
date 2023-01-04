@@ -10,6 +10,7 @@
 - freeglut3-dev
 - libsdl2-dev
 - libsdl2-image-dev
+- libftgl-dev
 
 ## BUILD
 ```
