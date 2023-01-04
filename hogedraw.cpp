@@ -31,6 +31,7 @@ void hogedraw::init_opengl() {
 	if (!this->window) {
 		throw std::runtime_error("Failed to init SDL window.");
 	}
+	SDL_SetWindowResizable(this->window, SDL_TRUE);
 	this->context = SDL_GL_CreateContext(this->window);
 	if (!this->context) {
 		throw std::runtime_error("Failed to init SDL OpenGL context.");
@@ -188,7 +189,12 @@ vec2<int> hogedraw::get_mouse_pos() {
 
 void hogedraw::switch_canvas(int num) {
 	this->push_current_objects();
-	this->current_canvas_idx = (this->current_canvas_idx+num)%this->canvases.size();
+	auto tmp = ((int)this->current_canvas_idx+num)%(int)this->canvases.size();
+	if (tmp < 0) {
+		this->current_canvas_idx = tmp + this->canvases.size();
+	}else {
+		this->current_canvas_idx = tmp;
+	}
 }
 
 void hogedraw::move_to_back_canvas() {
