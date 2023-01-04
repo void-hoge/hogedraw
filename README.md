@@ -6,11 +6,10 @@
 
 ## REQUIREMENTS
 - A compiler that supports C++11 or higher.
+- gnu make
+- freeglut3-dev
 - libsdl2-dev
-- libglut-dev
-- libgl-dev
 - libsdl2-image-dev
-- libftgl-dev
 
 ## BUILD
 ```
