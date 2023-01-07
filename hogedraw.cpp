@@ -4,14 +4,6 @@
 #include <iostream>
 #include <iomanip>
 
-hogedraw* create_hogedraw(lex_t& lex, option_t& option) {
-	if (lex.advance(std::regex("^root:"))) {
-		return new hogedraw(lex, option);
-	}else {
-		throw std::runtime_error("syntax error at create_hogedraw");
-	}
-}
-
 void hogedraw::init_font(const std::string fontpath) {
 	this->ftface = new FTPixmapFont(fontpath.c_str());
 	if (this->ftface->Error()) {
@@ -115,25 +107,13 @@ void hogedraw::render() const {
 	SDL_GL_SwapWindow(this->window);
 }
 
-void hogedraw::dump(std::ostream& ost, int tablevel) {
+nlohmann::json hogedraw::getjson() {
 	this->push_current_objects();
-	ost << tab*tablevel << "root:{" << std::endl;
-	if (this->canvases.size() > 0) {
-		for (std::size_t i = 0; i < this->canvases.size()-1; i++) {
-			this->canvases.at(i)->dump(ost, tablevel+1);
-			ost << "," << std::endl;
-		}
-		this->canvases.back()->dump(ost, tablevel+1);
-		ost << std::endl;
+	nlohmann::json j;
+	for (auto canvas: this->canvases) {
+		j["canvases"].push_back(canvas->getjson());
 	}
-	ost << tab*tablevel << "}";
-}
-
-void hogedraw::dump(std::ostream& ost) {
-	this->push_current_objects();
-	ost << "root:{"
-		<< this->canvases
-		<< "}";
+	return j;
 }
 
 void hogedraw::push_current_line() {
@@ -166,11 +146,10 @@ bool hogedraw::export_window_as_png(std::string filename) {
 	return retval == 0;
 }
 
-bool hogedraw::export_project_as_text_file(std::string filename) {
+bool hogedraw::export_project_as_json_file(std::string filename) {
 	std::ofstream ofst(filename);
 	if (ofst.is_open()) {
-		this->dump(ofst, 0);
-		ofst << std::endl;
+		ofst << this->getjson().dump(4);
 		ofst.close();
 		return true;
 	}
@@ -277,8 +256,8 @@ bool hogedraw::handle_key_events(const SDL_Event& event) {
 			this->push_canvas();
 			this->move_to_back_canvas();
 		}else if (keycode == SDLK_s) {
-			std::string filename = "project"+this->get_time_string()+".txt";
-			this->export_project_as_text_file(filename);
+			std::string filename = "project"+this->get_time_string()+".json";
+			this->export_project_as_json_file(filename);
 		}else if (keycode == SDLK_p){
 			std::string filename = "drawing"+this->get_time_string()+".png";
 			this->export_window_as_png(filename);
@@ -383,41 +362,6 @@ hogedraw::hogedraw() {
 	this->fontsize = 50;
 }
 
-hogedraw::hogedraw(lex_t& lex) {
-	this->colors.at(0) = color_t(0, 0, 0);
-	this->colors.at(1) = color_t(255, 255, 255);
-	this->background = this->colors.at(0);
-	this->base = this->colors.at(1);
-	this->init_opengl();
-	this->init_font();
-	if (!lex.advance(std::regex("\\{"))) {
-		throw std::runtime_error("syntax error at hogedraw");
-	}
-	while (lex.check(std::regex("^canvas:"))) {
-		this->canvases.push_back(create_canvas(lex, this->ftface));
-		lex.advance(std::regex("^,"));
-	}
-	if (!lex.advance(std::regex("^\\}"))) {
-		throw std::runtime_error("syntax error at hogedraw");
-	}
-	if (this->canvases.size() == 0) {
-		this->canvases.push_back(new canvas());
-	}
-	this->current_canvas_idx = 0;
-	this->current_line = nullptr;
-	this->current_text = nullptr;
-	this->trianglefill = false;
-	this->trianglesize = 50;
-	this->trianglethickness = 2;
-	this->squarefill = false;
-	this->squaresize = 50;
-	this->squarethickness = 2;
-	this->circlefill = false;
-	this->circlesize = 50;
-	this->circlethickness = 2;
-	this->fontsize = 50;
-}
-
 hogedraw::hogedraw(const option_t& option) {
 	this->init_options(option);
 	this->init_opengl();
@@ -428,19 +372,12 @@ hogedraw::hogedraw(const option_t& option) {
 	this->current_text = nullptr;
 }
 
-hogedraw::hogedraw(lex_t& lex, const option_t& option) {
+hogedraw::hogedraw(const nlohmann::json& json, const option_t& option) {
 	this->init_options(option);
 	this->init_opengl();
 	this->init_font(option.fontpath);
-	if (!lex.advance(std::regex("\\{"))) {
-		throw std::runtime_error("syntax error at hogedraw");
-	}
-	while (lex.check(std::regex("^canvas:"))) {
-		this->canvases.push_back(create_canvas(lex, this->ftface));
-		lex.advance(std::regex("^,"));
-	}
-	if (!lex.advance(std::regex("^\\}"))) {
-		throw std::runtime_error("syntax error at hogedraw");
+	for (std::size_t i = 0; i < json["canvases"].size(); i++) {
+		this->canvases.push_back(new canvas(json["canvases"].at(i), this->ftface));
 	}
 	if (this->canvases.size() == 0) {
 		this->canvases.push_back(new canvas());
@@ -448,7 +385,6 @@ hogedraw::hogedraw(lex_t& lex, const option_t& option) {
 	this->current_canvas_idx = 0;
 	this->current_line = nullptr;
 	this->current_text = nullptr;
-
 }
 
 

@@ -2,26 +2,11 @@
 #include "util.hpp"
 #include <iostream>
 
-canvas* create_canvas(lex_t& lex, FTPixmapFont* f) {
-	if (lex.advance(std::regex("^canvas:"))) {
-		return new canvas(lex, f);
-	}else {
-		throw std::runtime_error("syntax error at create_canvas");
-	}
-}
-
 canvas::canvas() {}
 
-canvas::canvas(lex_t& lex, FTPixmapFont* f) {
-	if (!lex.advance(std::regex("^\\{"))) {
-		throw std::runtime_error("syntax error at canvas");
-	}
-	while (lex.check(std::regex("^(text|line|regpoly):"))) {
-		this->objects.push_back(create_object(lex, f));
-		lex.advance(std::regex("^,"));
-	}
-	if (!lex.advance(std::regex("^\\}"))) {
-		throw std::runtime_error("syntax error at canvas");
+canvas::canvas(const nlohmann::json& json, FTPixmapFont* f) {
+	for (std::size_t i = 0; i < json["objects"].size(); i++) {
+		this->objects.push_back(create_object(json["objects"].at(i), f));
 	}
 }
 
@@ -51,26 +36,10 @@ void canvas::undo() {
 	}
 }
 
-void canvas::dump(std::ostream& ost) const {
-	ost << "canvas:{"
-		<< this->objects
-		<< "}";
-}
-
-void canvas::dump(std::ostream& ost, int tablevel) const {
-	ost << tab*tablevel << "canvas:{" << std::endl;
-	if (this->objects.size() > 0) {
-		for (std::size_t i = 0; i < this->objects.size()-1; i++) {
-			this->objects.at(i)->dump(ost, tablevel+1);
-			ost << "," << std::endl;
-		}
-		this->objects.back()->dump(ost, tablevel+1);
-		ost << std::endl;
+nlohmann::json canvas::getjson() const {
+	nlohmann::json j;
+	for (auto object: this->objects) {
+		j["objects"].push_back(object->getjson());
 	}
-	ost << tab*tablevel << "}";
-}
-
-std::ostream& operator <<(std::ostream& ost, const canvas* canv) {
-	canv->dump(ost);
-	return ost;
+	return j;
 }

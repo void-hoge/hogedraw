@@ -24,14 +24,9 @@ int main(const int argc, const char* argv[]) {
 	if (argc == 2) {
 		ifs = std::ifstream(argv[1]);
 		if (ifs.is_open()) {
-			std::string tmp;
-			std::string savecode;
-			while (std::getline(ifs, tmp)) {
-				savecode += tmp;
-			}
+			nlohmann::json json = nlohmann::json::parse(ifs);
+			hoge = new hogedraw(json, *option);
 			ifs.close();
-			lex_t lex(savecode);
-			hoge = create_hogedraw(lex, *option);
 		}else {
 			hoge = new hogedraw(*option);
 		}
@@ -40,5 +35,6 @@ int main(const int argc, const char* argv[]) {
 	}
 	hoge->mainloop();
 	delete hoge;
+	delete option;
 	return 0;
 }

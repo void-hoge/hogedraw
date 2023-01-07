@@ -2,16 +2,6 @@
 
 #include <iostream>
 
-std::string option_t::concate_tokens() {
-	std::string tmp = "^(";
-	tmp += this->tokens.at(0);
-	for (std::size_t i = 1; i < this->tokens.size(); i++) {
-		tmp += std::string("|") + this->tokens.at(i);
-	}
-	tmp += "):";
-	return tmp;
-}
-
 void option_t::init() {
 	this->colors.at(1) = color_t(255,255,255);
 	this->fontpath = "/usr/share/fonts/truetype/freefont/FreeMono.ttf";

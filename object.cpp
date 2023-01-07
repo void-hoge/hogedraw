@@ -5,79 +5,35 @@
 #include <cmath>
 #include <iostream>
 
-object* create_object(lex_t& lex, FTPixmapFont* f) {
-	if (!lex.check(std::regex("^(text|line|regpoly):"))) {
-		throw std::runtime_error("syntax error at create_object");
-	}
-	if (lex.match().str() == "text:") {
-		lex.advance();
-		return (object*)new text(lex, f);
-	}else if (lex.match().str() == "line:") {
-		lex.advance();
-		return (object*)new line(lex);
+object* create_object(const nlohmann::json& json, FTPixmapFont* f) {
+	if (json["type"] == "line") {
+		return (object*)new line(json);
+	}else if (json["type"] == "text") {
+		return (object*)new text(json, f);
+	}else if (json["type"] == "regpoly") {
+		return (object*)new regpoly(json);
 	}else {
-		lex.advance();
-		return (object*)new regpoly(lex);
-	}
-}
-
-std::ostream& operator <<(std::ostream& ost, const object* obj) {
-	obj->dump(ost);
-	return ost;
-}
-
-line::line(lex_t& lex) {
-	if (!lex.advance(std::regex("^\\{"))) {
-		throw std::runtime_error("syntax error at line");
-	}
-
-	if (lex.check(std::regex("^color:\\((\\d+),(\\d+),(\\d+)\\),"))) {
-		this->color.x() = std::stoi(lex.match().str(1));
-		this->color.y() = std::stoi(lex.match().str(2));
-		this->color.z() = std::stoi(lex.match().str(3));
-		lex.advance();
-	}else {
-		throw std::runtime_error("syntax error at line, while parsing the color");
-	}
-
-	if (lex.check(std::regex("^thickness:(\\d+),"))) {
-		this->thickness = std::stoi(lex.match().str(1));
-		lex.advance();
-	}else {
-		throw std::runtime_error("syntax error at line, while parsing the thickness");
-	}
-
-	if (lex.advance(std::regex("^vertices:\\{"))) {
-		while (lex.check(std::regex("^\\((\\d+),(\\d+)\\)"))) {
-			this->vertices.push_back(vec2<int>(
-										 std::stoi(lex.match().str(1)),
-										 std::stoi(lex.match().str(2))
-										 ));
-			lex.advance();
-			lex.advance(std::regex("^,"));
-		}
-		if (!lex.advance(std::regex("^\\}"))) {
-			throw std::runtime_error("syntax error at line, while parsing the vertices");
-		}
-	}else {
-		throw std::runtime_error("syntax error at line, while parsing the vertices");
-	}
-
-	if (!lex.advance(std::regex("^\\}"))) {
-		throw std::runtime_error("syntax error at line");
+		throw std::invalid_argument("Invalid object type.");
 	}
 }
 
 line::line(const color_t& c, int t) {
 	this->color = c;
 	this->thickness = t;
-	
 }
 
 line::line(const color_t& c, int t, const std::vector<vec2<int>>& init) {
 	this->color = c;
 	this->thickness = t;
 	this->vertices = init;
+}
+
+line::line(const nlohmann::json& json) {
+	this->color = vec3<int>(json["color"]);
+	this->thickness = json["thickness"];
+	for (std::size_t i = 0; i < json["vertices"].size(); i++) {
+		this->vertices.push_back(vec2<int>(json["vertices"].at(i)));
+	}
 }
 
 void line::render(const vec2<int>& windowsize) const {
@@ -98,70 +54,19 @@ bool line::undo() {
 	return false;
 }
 
-void line::dump(std::ostream& ost) const {
-	ost << "line:{"
-		<< "color:" << this->color << ","
-		<< "thickness:" << this->thickness << ","
-		<< "vertices:{" << this->vertices << "}"
-		<< "}";
-}
-
-void line::dump(std::ostream& ost, int tablevel) const {
-	ost << tab*tablevel << "line:{" << std::endl
-		<< tab*(tablevel+1) << "color:" << this->color << "," << std::endl
-		<< tab*(tablevel+1) << "thickness:" << this->thickness << "," << std::endl
-		<< tab*(tablevel+1) << "vertices:{" << this->vertices << "}" << std::endl
-		<< tab*tablevel << "}";
+nlohmann::json line::getjson() const {
+	nlohmann::json j;
+	j["type"] = "line";
+	j["color"] = this->color.getjson();
+	j["thickness"] = this->thickness;
+	for (const auto& vertex: this->vertices) {
+		j["vertices"].push_back(vertex.getjson());
+	}
+	return j;
 }
 
 void line::push_back(const vec2<int>& pos) {
 	this->vertices.push_back(pos);
-}
-
-text::text(lex_t& lex, FTPixmapFont* f) {
-	this->ftface = f;
-	if (!lex.advance(std::regex("^\\{"))) {
-		throw std::runtime_error("syntax error at text");
-	}
-	if (lex.check(std::regex("^color:\\((\\d+),(\\d+),(\\d+)\\),"))) {
-		this->color.x() = std::stoi(lex.match().str(1));
-		this->color.y() = std::stoi(lex.match().str(2));
-		this->color.z() = std::stoi(lex.match().str(3));		
-		lex.advance();
-	}else {
-		throw std::runtime_error("syntax error at text, while parsing the color");
-	}
-	
-	if (lex.check(std::regex("^pos:\\((\\d+),(\\d+)\\),"))) {
-		this->pos_.x() = std::stoi(lex.match().str(1));
-		this->pos_.y() = std::stoi(lex.match().str(2));
-		lex.advance();
-	}else {
-		throw std::runtime_error("syntax error at text, while parsing pos");
-	}
-
-	if (lex.check(std::regex("^size:(\\d+),"))) {
-		this->size = std::stoi(lex.match().str(1));
-		lex.advance();
-	}else {
-		throw std::runtime_error("syntax error at text, while parsing size");
-	}
-
-	std::size_t len;
-	if (lex.check(std::regex("^len:(\\d+),"))) {
-		len = std::stoi(lex.match().str(1));
-		lex.advance();
-	}
-	std::string re = std::string("^str:\"(") + std::string(".")*len + ")\"";
-	if (lex.check(std::regex(re))) {
-		this->str = lex.match().str(1);
-		lex.advance();
-	}else {
-		throw std::runtime_error("syntax error at text, while parsing str");
-	}
-	if (!lex.advance(std::regex("^\\}"))) {
-		throw std::runtime_error("syntax error at text");
-	}
 }
 
 text::text(const color_t& c, const vec2<int>& p, FTPixmapFont* f, int s, const std::string& init)  {
@@ -170,6 +75,14 @@ text::text(const color_t& c, const vec2<int>& p, FTPixmapFont* f, int s, const s
 	this->ftface = f;
 	this->size = s;
 	this->str = init;
+}
+
+text::text(const nlohmann::json& json, FTPixmapFont* f) {
+	this->ftface = f;
+	this->color = vec3<int>(json["color"]);
+	this->pos_ = vec2<int>(json["pos"]);
+	this->size = json["size"];
+	this->str = json["str"];
 }
 
 void text::render(const vec2<int>& windowsize) const {
@@ -197,87 +110,18 @@ void text::push_back(const char ch) {
 	this->str.push_back(ch);
 }
 
-void text::dump(std::ostream& ost) const {
-	ost << "text:{"
-		<< "color:" << this->color << ","
-		<< "pos:" << this->pos_ << ","
-		<< "size:" << this->size << ","
-		<< "len:" << this->str.size() << ","
-		<< "str:\"" << this->str << "\""
-		<< "}";
-}
-
-void text::dump(std::ostream& ost, int tablevel) const {
-	ost << tab*tablevel << "text:{" << std::endl
-		<< tab*(tablevel+1) << "color:" << this->color << "," << std::endl
-		<< tab*(tablevel+1) << "pos:" << this->pos_ << "," << std::endl
-		<< tab*(tablevel+1) << "size:" << this->size << "," << std::endl
-		<< tab*(tablevel+1) << "len:" << this->str.size() << "," << std::endl
-		<< tab*(tablevel+1) << "str:\"" << this->str << "\"" << std::endl
-		<< tab*tablevel << "}";
+nlohmann::json text::getjson() const {
+	nlohmann::json j;
+	j["type"] = "text";
+	j["color"] = this->color.getjson();
+	j["pos"] = this->pos().getjson();
+	j["size"] = this->size;
+	j["str"] = this->str;
+	return j;
 }
 
 const vec2<int>& text::pos() const {
 	return this->pos_;
-}
-
-regpoly::regpoly(lex_t& lex) {
-	if (!lex.advance(std::regex("^\\{"))) {
-		throw std::runtime_error("syntax error at regpoly");
-	}
-
-	if (lex.check(std::regex("^color:\\((\\d+),(\\d+),(\\d+)\\),"))) {
-		this->color.x() = std::stoi(lex.match().str(1));
-		this->color.y() = std::stoi(lex.match().str(2));
-		this->color.z() = std::stoi(lex.match().str(3));
-		lex.advance();
-	}else {
-		throw std::runtime_error("syntax error at regpoly, while parsing the color");
-	}
-
-	if (lex.check(std::regex("^pos:\\((\\d+),(\\d+)\\),"))) {
-		this->pos.x() = std::stoi(lex.match().str(1));
-		this->pos.y() = std::stoi(lex.match().str(2));
-		lex.advance();
-	}else {
-		throw std::runtime_error("syntax error at regpoly, while parsing the pos");
-	}
-
-	if (lex.check(std::regex("^n:(\\d+),"))) {
-		this->n = std::stoi(lex.match().str(1));
-		lex.advance();
-	}else {
-		throw std::runtime_error("syntax error at regpoly, while parsing the n");
-	}
-
-	if (lex.check(std::regex("^size:(\\d+),"))) {
-		this->size = std::stoi(lex.match().str(1));
-		lex.advance();
-	}else {
-		throw std::runtime_error("syntax error at regpoly, while parsing the size");
-	}
-
-	if (lex.check(std::regex("^filled:(true|false),"))) {
-		if (lex.match().str(1) == "true") {
-			this->filled = true;
-		}else {
-			this->filled = false;
-		}
-		lex.advance();
-	}else {
-		throw std::runtime_error("syntax error at regpoly, while parsing the filled");
-	}
-
-	if (lex.check(std::regex("^thickness:(\\d+)"))) {
-		this->thickness = std::stoi(lex.match().str(1));
-		lex.advance();
-	}else {
-		throw std::runtime_error("syntax error at regpoly, while parsing the thickness");
-	}
-	
-	if (!lex.advance(std::regex("^\\}"))) {
-		throw "syntax error at regpoly";
-	}
 }
 
 regpoly::regpoly(const color_t& c, const vec2<int>& p, int n, int s, bool f, int t) {
@@ -287,6 +131,15 @@ regpoly::regpoly(const color_t& c, const vec2<int>& p, int n, int s, bool f, int
 	this->size = s;
 	this->filled = f;
 	this->thickness = t;
+}
+
+regpoly::regpoly(const nlohmann::json& json) {
+	this->color = vec3<int>(json["color"]);
+	this->pos = vec2<int>(json["pos"]);
+	this->n = json["n"];
+	this->size = json["size"];
+	this->filled = json["filled"];
+	this->thickness = json["thickness"];
 }
 
 void regpoly::render(const vec2<int>& windowsize) const {
@@ -314,26 +167,14 @@ bool regpoly::undo() {
 	return false;
 }
 
-void regpoly::dump(std::ostream& ost) const {
-	ost << std::boolalpha
-		<< "regpoly:{"
-		<< "color:" << this->color << ","
-		<< "pos:" << this->pos << ","
-		<< "n:" << this->n << ","
-		<< "size:" << this->size << ","
-		<< "filled:" << this->filled << ","
-		<< "thickness:" << this->thickness
-		<< "}";
-}
-
-void regpoly::dump(std::ostream& ost, int tablevel) const {
-	ost << std::boolalpha
-		<< tab*tablevel << "regpoly:{" << std::endl
-		<< tab*(tablevel+1) << "color:" << this->color << "," << std::endl
-		<< tab*(tablevel+1) << "pos:" << this->pos << "," << std::endl
-		<< tab*(tablevel+1) << "n:" << this->n << "," << std::endl
-		<< tab*(tablevel+1) << "size:" << this->size << "," << std::endl
-		<< tab*(tablevel+1) << "filled:" << this->filled << "," << std::endl
-		<< tab*(tablevel+1) << "thickness:" << this->thickness << std::endl
-		<< tab*tablevel << "}";
+nlohmann::json regpoly::getjson() const {
+	nlohmann::json j;
+	j["type"] = "regpoly";
+	j["color"] = this->color.getjson();
+	j["pos"] = this->pos.getjson();
+	j["n"] = this->n;
+	j["size"] = this->size;
+	j["filled"] = this->filled;
+	j["thickness"] = this->thickness;
+	return j;
 }

@@ -4,6 +4,8 @@
 #include <ostream>
 #include <vector>
 
+#include <nlohmann/json.hpp>
+
 #include "lex.hpp"
 
 template<typename T>
@@ -16,6 +18,10 @@ public:
 	vec2(T x, T y): x_(x), y_(y) {}
 	vec2(const vec2<T>& vec): x_(vec.x()), y_(vec.y()) {}
 	vec2(lex_t& lex);
+	vec2(const nlohmann::json& json) {
+		x_ = json.at(0);
+		y_ = json.at(1);
+	}
 	T& x() {
 		return this->x_;
 	}
@@ -34,6 +40,12 @@ public:
 			<< ","
 			<< this->y()
 			<< ")";
+	}
+	nlohmann::json getjson() const {
+		nlohmann::json j;
+		j.push_back(this->x());
+		j.push_back(this->y());
+		return j;
 	}
 };
 
@@ -59,6 +71,11 @@ public:
 	vec3(T x, T y, T z): x_(x), y_(y), z_(z) {}
 	vec3(const vec3<T>& vec): x_(vec.x()), y_(vec.y()), z_(vec.z()) {}
 	vec3(lex_t& lex);
+	vec3(const nlohmann::json& json) {
+		x_ = json.at(0);
+		y_ = json.at(1);
+		z_ = json.at(2);
+	}
 	T& x() {
 		return this->x_;
 	}
@@ -85,6 +102,14 @@ public:
 			<< ","
 			<< this->z()
 			<< ")";
+	}
+
+	nlohmann::json getjson() const {
+		nlohmann::json j;
+		j.push_back(this->x());
+		j.push_back(this->y());
+		j.push_back(this->z());
+		return j;
 	}
 };
 

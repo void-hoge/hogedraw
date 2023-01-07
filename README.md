@@ -2,7 +2,7 @@
 - hogedraw: a simple drawing tool using SDL_opengl.
 
 ![hogedraw](welcome.png)
-- This project file is availabe at [here](./welcome.txt).
+- This project file is availabe at [here](./welcome.json).
 
 ## REQUIREMENTS
 - A compiler that supports C++11 or higher.
@@ -11,6 +11,7 @@
 - libsdl2-dev
 - libsdl2-image-dev
 - libftgl-dev
+- nlohmann-json3-dev
 
 ## BUILD
 ```
@@ -44,7 +45,7 @@ $
 | Ctrl + t           | Push canvas to the end    |
 | Ctrl + tab         | Switch to next canvas     |
 | Ctrl + Shift + tab | Switch to previous canvas |
-| Ctrl + s           | Save project as text file |
+| Ctrl + s           | Save project as json file |
 | Ctrl + p           | Save canvas as png file   |
 
 ## .hogedrawrc

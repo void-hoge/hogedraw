@@ -9,27 +9,6 @@
 
 class option_t {
 private:
-	const std::vector<std::string> tokens = {
-		"color0",
-		"color1",
-		"color2",
-		"color3",
-		"color4",
-		"color5",
-		"linethickness",
-		"circlefill",
-		"circlesize",
-		"circlethickness",
-		"trianglefill",
-		"trianglesize",
-		"trianglethickness",
-		"squarefill",
-		"squaresize",
-		"squarethickness",
-		"fontpath",
-		"fontsize"
-	};
-	std::string concate_tokens();
 	void init();
 public:
 	std::array<color_t, 6> colors;

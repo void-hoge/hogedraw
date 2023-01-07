@@ -7,6 +7,8 @@
 #include <SDL_image.h>
 #include <FTGL/ftgl.h>
 
+#include <nlohmann/json.hpp>
+
 #include <vector>
 #include <string>
 #include <array>
@@ -18,7 +20,6 @@
 #include "vec.hpp"
 #include "object.hpp"
 #include "canvas.hpp"
-#include "lex.hpp"
 #include "option.hpp"
 
 class hogedraw {
@@ -58,11 +59,10 @@ private:
 
 	std::string get_time_string();
 	bool export_window_as_png(std::string filename);
-	bool export_project_as_text_file(std::string filename);
+	bool export_project_as_json_file(std::string filename);
 
 	void render() const;
-	void dump(std::ostream& ost, int tablevel);
-	void dump(std::ostream& ost);
+	nlohmann::json getjson();
 
 	void push_current_line();
 	void push_current_text();
@@ -82,13 +82,10 @@ private:
 	bool handle_key_events(const SDL_Event& event);
 public:
 	hogedraw();
-	hogedraw(lex_t& lex);
 	hogedraw(const option_t& option);
-	hogedraw(lex_t& lex, const option_t& option);
+	hogedraw(const nlohmann::json& json, const option_t& option);
 	~hogedraw();
 	void mainloop();
 };
-
-hogedraw* create_hogedraw(lex_t& lex, option_t& option);
 
 #endif // include guard of HOGEDRAW_HPP
