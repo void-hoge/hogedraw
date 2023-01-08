@@ -32,10 +32,6 @@ void hogedraw::init_opengl() {
 	if (!this->renderer) {
 		throw std::runtime_error("Failed to init SDL renderer.");
 	}
-	glClearColor((float)this->background.x()/255,
-				 (float)this->background.y()/255,
-				 (float)this->background.z()/255,
-				 0.0);
 	glViewport(0, 0, this->windowsize.x(), this->windowsize.y());
 }
 
@@ -96,7 +92,6 @@ std::string hogedraw::get_time_string() {
 
 void hogedraw::render() const {
 	glMatrixMode(GL_PROJECTION);
-	glClear(GL_COLOR_BUFFER_BIT);
 	this->canvases.at(this->current_canvas_idx)->render(this->windowsize);
 	if (this->current_line != nullptr) {
 		this->current_line->render(this->windowsize);
@@ -157,7 +152,7 @@ bool hogedraw::export_project_as_json_file(std::string filename) {
 }
 
 void hogedraw::push_canvas() {
-	this->canvases.push_back(new canvas());
+	this->canvases.push_back(new canvas(this->background));
 }
 
 vec2<int> hogedraw::get_mouse_pos() {
@@ -345,7 +340,7 @@ hogedraw::hogedraw() {
 	this->base = this->colors.at(1);
 	this->init_opengl();
 	this->init_font();
-	this->canvases.push_back(new canvas());
+	this->canvases.push_back(new canvas(this->background));
 	this->current_canvas_idx = 0;
 	this->current_line = nullptr;
 	this->current_text = nullptr;
@@ -366,7 +361,7 @@ hogedraw::hogedraw(const option_t& option) {
 	this->init_options(option);
 	this->init_opengl();
 	this->init_font(option.fontpath);
-	this->canvases.push_back(new canvas());
+	this->canvases.push_back(new canvas(this->background));
 	this->current_canvas_idx = 0;
 	this->current_line = nullptr;
 	this->current_text = nullptr;
@@ -380,7 +375,7 @@ hogedraw::hogedraw(const nlohmann::json& json, const option_t& option) {
 		this->canvases.push_back(new canvas(json["canvases"].at(i), this->ftface));
 	}
 	if (this->canvases.size() == 0) {
-		this->canvases.push_back(new canvas());
+		this->canvases.push_back(new canvas(this->background));
 	}
 	this->current_canvas_idx = 0;
 	this->current_line = nullptr;

@@ -1,8 +1,8 @@
 # HOGEDRAW
 - hogedraw: a simple drawing tool using SDL_opengl.
 
-![hogedraw](welcome.png)
-- This project file is availabe at [here](./welcome.json).
+![hogedraw](./welcome.png)
+- This project file is availabe at [here](welcome.json).
 
 ## REQUIREMENTS
 - A compiler that supports C++11 or higher.

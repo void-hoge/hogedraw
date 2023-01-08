@@ -17,8 +17,9 @@
 class canvas {
 private:
 	std::vector<object*> objects;
+	color_t background;
 public:
-	canvas();
+	canvas(color_t bg);
 	canvas(const nlohmann::json& json, FTPixmapFont* f);
 	~canvas();
 	void render(vec2<int> windowsize) const;
