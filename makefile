@@ -36,5 +36,8 @@ option.o: option.cpp
 vec.o: vec.cpp
 	$(CC) vec.cpp -c $(STD) $(RELEASE) -o vec.o
 
+test: test.cpp
+	$(CC) test.cpp $(CFLAGS) -o test
+
 clean:
 	rm $(PROG) *.o *~ *.out

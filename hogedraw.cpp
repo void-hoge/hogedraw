@@ -144,7 +144,7 @@ bool hogedraw::export_window_as_png(std::string filename) {
 bool hogedraw::export_project_as_json_file(std::string filename) {
 	std::ofstream ofst(filename);
 	if (ofst.is_open()) {
-		ofst << this->getjson().dump(4);
+		ofst << this->getjson().dump();
 		ofst.close();
 		return true;
 	}
@@ -208,8 +208,8 @@ void hogedraw::handle_mouse_release(const SDL_Event& event) {
 }
 
 void hogedraw::handle_window_events(const SDL_Event& event) {
+	this->updated = true;
 	if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
-		this->updated = true;
 		this->windowsize.x() = event.window.data1;
 		this->windowsize.y() = event.window.data2;
 		glViewport(0, 0, this->windowsize.x(), this->windowsize.y());
