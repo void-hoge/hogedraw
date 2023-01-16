@@ -3,6 +3,7 @@
 
 #include <GL/glut.h>
 #include <SDL.h>
+#include <SOIL/SOIL.h>
 #include <SDL_opengl.h>
 #include <FTGL/ftgl.h>
 
@@ -16,7 +17,7 @@
 
 const double PI = 3.14159265;
 
-class object{
+class object {
 protected:
 	color_t color;
 public:
@@ -69,6 +70,22 @@ private:
 public:
 	regpoly(const nlohmann::json& json);
 	regpoly(const color_t& c, const vec2<int>& p, int n, int s=100, bool f=false, int t=2);
+	void render(const vec2<int>& windowsize) const;
+	bool undo();
+	nlohmann::json getjson() const;
+};
+
+class image : protected object {
+private:
+	vec2<int> pos;
+	vec2<int> size;
+	int format;
+	std::string filename;
+	unsigned int id;
+public:
+	image(const nlohmann::json& json);
+	image(const std::string& fn, const vec2<int>& p);
+	void loadimage(const std::string& fn);
 	void render(const vec2<int>& windowsize) const;
 	bool undo();
 	nlohmann::json getjson() const;

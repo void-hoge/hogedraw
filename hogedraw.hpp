@@ -84,6 +84,8 @@ public:
 	hogedraw();
 	hogedraw(const option_t& option);
 	hogedraw(const nlohmann::json& json, const option_t& option);
+	hogedraw(const option_t& option, const std::vector<std::string>& filenames);
+	hogedraw(const nlohmann::json& json, const option_t& option, const std::vector<std::string>& filenames);
 	~hogedraw();
 	void mainloop();
 };

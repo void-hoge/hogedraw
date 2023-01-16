@@ -12,6 +12,8 @@ object* create_object(const nlohmann::json& json, FTPixmapFont* f) {
 		return (object*)new text(json, f);
 	}else if (json["type"] == "regpoly") {
 		return (object*)new regpoly(json);
+	}else if (json["type"] == "image") {
+		return (object*)new image(json);
 	}else {
 		throw std::invalid_argument("Invalid object type.");
 	}
@@ -55,14 +57,14 @@ bool line::undo() {
 }
 
 nlohmann::json line::getjson() const {
-	nlohmann::json j;
-	j["type"] = "line";
-	j["color"] = this->color.getjson();
-	j["thickness"] = this->thickness;
+	nlohmann::json json;
+	json["type"] = "line";
+	json["color"] = this->color.getjson();
+	json["thickness"] = this->thickness;
 	for (const auto& vertex: this->vertices) {
-		j["vertices"].push_back(vertex.getjson());
+		json["vertices"].push_back(vertex.getjson());
 	}
-	return j;
+	return json;
 }
 
 void line::push_back(const vec2<int>& pos) {
@@ -111,13 +113,13 @@ void text::push_back(const char ch) {
 }
 
 nlohmann::json text::getjson() const {
-	nlohmann::json j;
-	j["type"] = "text";
-	j["color"] = this->color.getjson();
-	j["pos"] = this->pos().getjson();
-	j["size"] = this->size;
-	j["str"] = this->str;
-	return j;
+	nlohmann::json json;
+	json["type"] = "text";
+	json["color"] = this->color.getjson();
+	json["pos"] = this->pos().getjson();
+	json["size"] = this->size;
+	json["str"] = this->str;
+	return json;
 }
 
 const vec2<int>& text::pos() const {
@@ -160,7 +162,7 @@ void regpoly::render(const vec2<int>& windowsize) const {
 		glVertex2f(x, y);
 	}
 	glEnd();
-	glPopMatrix();	
+	glPopMatrix();
 }
 
 bool regpoly::undo() {
@@ -168,13 +170,90 @@ bool regpoly::undo() {
 }
 
 nlohmann::json regpoly::getjson() const {
-	nlohmann::json j;
-	j["type"] = "regpoly";
-	j["color"] = this->color.getjson();
-	j["pos"] = this->pos.getjson();
-	j["n"] = this->n;
-	j["size"] = this->size;
-	j["filled"] = this->filled;
-	j["thickness"] = this->thickness;
-	return j;
+	nlohmann::json json;
+	json["type"] = "regpoly";
+	json["color"] = this->color.getjson();
+	json["pos"] = this->pos.getjson();
+	json["n"] = this->n;
+	json["size"] = this->size;
+	json["filled"] = this->filled;
+	json["thickness"] = this->thickness;
+	return json;
+}
+
+image::image(const nlohmann::json& json) {
+	this->pos = vec2<int>(json["pos"]);
+	this->filename = json["filename"];
+	this->size = vec2<int>(json["size"]);
+	this->loadimage(this->filename);
+}
+
+image::image(const std::string& fn, const vec2<int>& p) {
+	this->filename = fn;
+	this->pos = p;
+	this->loadimage(this->filename);
+}
+
+void image::loadimage(const std::string& fn) {
+	int channels;
+	unsigned char* image = SOIL_load_image(
+		fn.c_str(),
+		&(this->size.x()),
+		&(this->size.y()),
+		&channels,
+		SOIL_LOAD_AUTO);
+	if (image == nullptr) {
+		std::string err = "Failed to load \"" + fn + "\".";
+		throw std::invalid_argument(err);
+	}
+	if (channels == 4) {
+		this->format = GL_RGBA;
+	}else {
+		this->format = GL_RGB;
+	}
+	glGenTextures(1, &(this->id));
+	glBindTexture(GL_TEXTURE_2D, this->id);
+	glTexImage2D(
+		GL_TEXTURE_2D,
+		0, this->format,
+		this->size.x(), this->size.y(),
+		0, this->format,
+		GL_UNSIGNED_BYTE, image);
+	SOIL_free_image_data(image);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+}
+
+void image::render(const vec2<int>& windowsize) const {
+	glPushMatrix();
+	glLoadIdentity();
+	glBindTexture(GL_TEXTURE_2D, this->id);
+	glColor3d(255, 255, 255);
+	glEnable(GL_TEXTURE_2D);
+	glOrtho(0, windowsize.x(), windowsize.y(), 0, 0, 1);
+	glBegin(GL_QUADS);
+	glTexCoord2d(0.0, 1.0);
+	glVertex3d(0.0, this->size.y(), 0.0);
+	glTexCoord2d(1.0, 1.0);
+	glVertex3d(this->size.x(), this->size.y(), 0.0);
+	glTexCoord2d(1.0, 0.0);
+	glVertex3d(this->size.x(), 0.0,  0.0);
+	glTexCoord2d(0.0, 0.0);
+	glVertex3d(0.0, 0.0, 0.0);
+	glEnd();
+	glDisable(GL_TEXTURE_2D);
+	glPopMatrix();
+}
+
+bool image::undo() {
+	return false;
+}
+
+nlohmann::json image::getjson() const {
+	nlohmann::json json;
+	json["type"] = "image";
+	json["pos"] = this->pos.getjson();
+	json["size"] = this->size.getjson();
+	json["filename"] = this->filename;
+	return json;
 }

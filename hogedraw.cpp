@@ -104,11 +104,11 @@ void hogedraw::render() const {
 
 nlohmann::json hogedraw::getjson() {
 	this->push_current_objects();
-	nlohmann::json j;
+	nlohmann::json json;
 	for (auto canvas: this->canvases) {
-		j["canvases"].push_back(canvas->getjson());
+		json["canvases"].push_back(canvas->getjson());
 	}
-	return j;
+	return json;
 }
 
 void hogedraw::push_current_line() {
@@ -382,6 +382,38 @@ hogedraw::hogedraw(const nlohmann::json& json, const option_t& option) {
 	this->current_text = nullptr;
 }
 
+hogedraw::hogedraw(const option_t& option, const std::vector<std::string>& filenames) {
+	this->init_options(option);
+	this->init_opengl();
+	this->init_font(option.fontpath);
+	for (const auto& filename: filenames) {
+		this->canvases.push_back(new canvas(this->background, filename));
+	}
+	if (this->canvases.size() == 0) {
+		this->canvases.push_back(new canvas(this->background));
+	}
+	this->current_canvas_idx = 0;
+	this->current_line = nullptr;
+	this->current_text = nullptr;
+}
+
+hogedraw::hogedraw(const nlohmann::json& json, const option_t& option, const std::vector<std::string>& filenames) {
+	this->init_options(option);
+	this->init_opengl();
+	this->init_font(option.fontpath);
+	for (std::size_t i = 0; i < json["canvases"].size(); i++) {
+		this->canvases.push_back(new canvas(json["canvases"].at(i), this->ftface));
+	}
+	for (const auto& filename: filenames) {
+		this->canvases.push_back(new canvas(this->background, filename));
+	}	
+	if (this->canvases.size() == 0) {
+		this->canvases.push_back(new canvas(this->background));
+	}
+	this->current_canvas_idx = 0;
+	this->current_line = nullptr;
+	this->current_text = nullptr;
+}
 
 hogedraw::~hogedraw() {
 	for (auto canv: this->canvases) {

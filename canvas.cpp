@@ -4,6 +4,10 @@
 
 canvas::canvas(color_t bg): background(bg) {}
 
+canvas::canvas(color_t bg, const std::string& fn): background(bg) {
+	this->objects.push_back((object*)new image(fn, vec2<int>(0,0)));
+}
+
 canvas::canvas(const nlohmann::json& json, FTPixmapFont* f) {
 	this->background = color_t(json["background"]["color"]);
 	for (std::size_t i = 0; i < json["objects"].size(); i++) {
@@ -11,12 +15,7 @@ canvas::canvas(const nlohmann::json& json, FTPixmapFont* f) {
 	}
 }
 
-canvas::~canvas() {
-	for (auto obj: this->objects) {
-		delete obj;
-	}
-	this->objects.clear();
-}
+canvas::~canvas() {}
 
 void canvas::render(vec2<int>windowsize) const {
 	glClearColor((float)this->background.x()/255,

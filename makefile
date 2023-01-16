@@ -1,8 +1,8 @@
 CC = c++
 RELEASE = -O3 -mtune=native -march=native
 SDLFLAGS = $(shell pkg-config --cflags sdl2)
-SDLLIBS = $(shell pkg-config --libs sdl2) -lSDL2_image
-SDLIMAGELIBS = $(shell pkg-config --libs SDL2_image)
+SDLLIBS = $(shell pkg-config --libs sdl2)
+SDLIMAGELIBS = $(shell pkg-config --libs SDL2_image) -lSOIL
 GLLIBS = $(shell pkg-config --libs gl)
 GLUTFLAGS = $(shell pkg-config --cflags glut)
 GLUTLIBS = $(shell pkg-config --libs glut)
@@ -35,9 +35,6 @@ option.o: option.cpp
 
 vec.o: vec.cpp
 	$(CC) vec.cpp -c $(STD) $(RELEASE) -o vec.o
-
-test: test.cpp
-	$(CC) test.cpp $(CFLAGS) -o test
 
 clean:
 	rm $(PROG) *.o *~ *.out
