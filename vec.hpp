@@ -47,6 +47,16 @@ public:
 		j.push_back(this->y());
 		return j;
 	}
+	vec2<T>& operator+=(const vec2<T>& a) {
+		this->x() += a.x();
+		this->y() += a.y();
+		return *this;
+	}
+	vec2<T>& operator-=(const vec2<T>& a) {
+		this->x() -= a.x();
+		this->y() -= a.y();
+		return *this;
+	}
 };
 
 template<typename T>
@@ -58,6 +68,26 @@ std::ostream& operator <<(std::ostream& ost, const vec2<T>& vec) {
 template<typename T>
 bool operator ==(const vec2<T>& a, const vec2<T>& b) {
 	return a.x() == b.x() && a.y() == b.y();
+}
+
+template<typename T>
+vec2<T> operator+(const vec2<T>& a, const vec2<T>& b) {
+	return vec2<T>(a.x() + b.x(), a.y() + b.y());
+}
+
+template<typename T>
+vec2<T> operator-(const vec2<T>& a, const vec2<T>& b) {
+	return vec2<T>(a.x() - b.x(), a.y() - b.y());
+}
+
+template<typename T>
+vec2<T> operator*(const vec2<T>& a, const double scale) {
+	return vec2<T>(a.x()*scale, a.y()*scale);
+}
+
+template<typename T>
+vec2<T> operator/(const vec2<T>& a, const double scale) {
+	return vec2<T>(a.x()/scale, a.y()/scale);
 }
 
 template<typename T>

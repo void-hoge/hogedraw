@@ -22,6 +22,9 @@
 #include "canvas.hpp"
 #include "option.hpp"
 
+const double minscale = 0.25;
+const double maxscale = 5.0;
+
 class hogedraw {
 private:
 	vec2<int> windowsize;
@@ -52,6 +55,8 @@ private:
 	text* current_text;
 
 	bool updated;
+	vec2<int> offset;
+	double scale;
 
 	void init_font(const std::string fontpath="/usr/share/fonts/truetype/freefont/FreeMono.ttf");
 	void init_opengl();
@@ -80,6 +85,7 @@ private:
 	void handle_window_events(const SDL_Event& event);
 	void handle_text_input_event(const SDL_Event& event);
 	bool handle_key_events(const SDL_Event& event);
+	void handle_wheel_event(const SDL_Event& event);
 public:
 	hogedraw();
 	hogedraw(const option_t& option);

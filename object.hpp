@@ -21,7 +21,7 @@ class object {
 protected:
 	color_t color;
 public:
-	virtual void render(const vec2<int>& windowsize) const = 0;
+	virtual void render(const vec2<int>& offset=vec2<int>(0,0), const double scale=1.0) const = 0;
 	virtual bool undo() = 0;
 	virtual nlohmann::json getjson() const = 0;
 };
@@ -38,7 +38,7 @@ public:
 	line(const nlohmann::json& json);
 	line(const color_t& c, int t=2);
 	line(const color_t& c, int t, const std::vector<vec2<int>>& init);
-	void render(const vec2<int>& windowsize) const;
+	void render(const vec2<int>& offset=vec2<int>(0,0), const double scale=1.0) const;
 	bool undo();
 	nlohmann::json getjson() const;
 	void push_back(const vec2<int>& pos);
@@ -53,7 +53,7 @@ private:
 public:
 	text(const nlohmann::json& json, FTPixmapFont* f);
 	text(const color_t& c, const vec2<int>& p, FTPixmapFont* f, int s=100, const std::string& init="");
-	void render(const vec2<int>& windowsize) const;
+	void render(const vec2<int>& offset=vec2<int>(0,0), const double scale=1.0) const;
 	bool undo();
 	void push_back(const char ch);
 	nlohmann::json getjson() const;
@@ -70,7 +70,7 @@ private:
 public:
 	regpoly(const nlohmann::json& json);
 	regpoly(const color_t& c, const vec2<int>& p, int n, int s=100, bool f=false, int t=2);
-	void render(const vec2<int>& windowsize) const;
+	void render(const vec2<int>& offset=vec2<int>(0,0), const double scale=1.0) const;
 	bool undo();
 	nlohmann::json getjson() const;
 };
@@ -86,7 +86,7 @@ public:
 	image(const nlohmann::json& json);
 	image(const std::string& fn, const vec2<int>& p);
 	void loadimage(const std::string& fn);
-	void render(const vec2<int>& windowsize) const;
+	void render(const vec2<int>& offset=vec2<int>(0,0), const double scale=1.0) const;
 	bool undo();
 	nlohmann::json getjson() const;
 };

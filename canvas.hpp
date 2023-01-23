@@ -25,7 +25,7 @@ public:
 	canvas(const nlohmann::json& json, FTPixmapFont* f);
 	~canvas();
 	void loadimage(std::string flnm);
-	void render(vec2<int> windowsize) const;
+	void render(const vec2<int>& offset, const double scale) const;
 	void push_back(object* obj);
 	void undo();
 	nlohmann::json getjson() const;

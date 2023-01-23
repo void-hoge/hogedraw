@@ -5,11 +5,11 @@
 #include <cmath>
 #include <iostream>
 
-object* create_object(const nlohmann::json& json, FTPixmapFont* f) {
+object* create_object(const nlohmann::json& json, FTPixmapFont* ftfont) {
 	if (json["type"] == "line") {
 		return (object*)new line(json);
 	}else if (json["type"] == "text") {
-		return (object*)new text(json, f);
+		return (object*)new text(json, ftfont);
 	}else if (json["type"] == "regpoly") {
 		return (object*)new regpoly(json);
 	}else if (json["type"] == "image") {
@@ -38,18 +38,16 @@ line::line(const nlohmann::json& json) {
 	}
 }
 
-void line::render(const vec2<int>& windowsize) const {
-	glPushMatrix();
-	glLoadIdentity();
-	glOrtho(0, windowsize.x(), windowsize.y(), 0, 0, 1);
+void line::render(const vec2<int>& offset, const double scale) const {
 	glColor3d(this->color.x(), this->color.y(), this->color.z());
 	glLineWidth(this->thickness);
 	glBegin(GL_LINE_STRIP);
 	for (auto point: this->vertices) {
-		glVertex2f(point.x(), point.y());
+		glVertex2f(
+			offset.x() + point.x()*scale,
+			offset.y() + point.y()*scale);
 	}
 	glEnd();
-	glPopMatrix();
 }
 
 bool line::undo() {
@@ -87,15 +85,16 @@ text::text(const nlohmann::json& json, FTPixmapFont* f) {
 	this->str = json["str"];
 }
 
-void text::render(const vec2<int>& windowsize) const {
-	glPushMatrix();
-	glLoadIdentity();
-	this->ftface->FaceSize(this->size);
-	glOrtho(0, windowsize.x(), windowsize.y(), 0, 0, 1);
+void text::render(const vec2<int>& offset, const double scale) const {
+	this->ftface->FaceSize(this->size*scale);
 	glColor3d(this->color.x(), this->color.y(), this->color.z());
-	glRasterPos2f(this->pos().x(), this->pos().y()+(this->ftface->LineHeight()));
-	this->ftface->Render(this->str.c_str());
-	glPopMatrix();
+	double x = this->pos().x()*scale + offset.x();
+	double y = this->pos().y()*scale + this->ftface->LineHeight() + offset.y();
+	glRasterPos2f(0,0);
+	this->ftface->Render(
+		this->str.c_str(), -1,
+		FTPoint(x,-y),
+		FTPoint(0,0), FTGL::RENDER_ALL);
 }
 
 bool text::undo() {
@@ -144,10 +143,7 @@ regpoly::regpoly(const nlohmann::json& json) {
 	this->thickness = json["thickness"];
 }
 
-void regpoly::render(const vec2<int>& windowsize) const {
-	glPushMatrix();
-	glLoadIdentity();
-	glOrtho(0, windowsize.x(), windowsize.y(), 0, 0, 1);
+void regpoly::render(const vec2<int>& offset, const double scale) const {
 	glColor3d(this->color.x(), this->color.y(), this->color.z());
 	glLineWidth(this->thickness);
 	if (this->filled) {
@@ -155,14 +151,13 @@ void regpoly::render(const vec2<int>& windowsize) const {
 	}else {
 		glBegin(GL_LINE_LOOP);
 	}
-	double delta = (double)(2*PI)/this->n;
+	double delta = (2*PI)/this->n;
 	for (double theta = delta/2; theta < PI*2; theta+=delta) {
-		float x = this->pos.x()-this->size*std::sin(theta);
-		float y = this->pos.y()+this->size*std::cos(theta);
+		float x = offset.x() + this->pos.x()*scale - scale*this->size*std::sin(theta);
+		float y = offset.y() + this->pos.y()*scale + scale*this->size*std::cos(theta);
 		glVertex2f(x, y);
 	}
 	glEnd();
-	glPopMatrix();
 }
 
 bool regpoly::undo() {
@@ -224,25 +219,21 @@ void image::loadimage(const std::string& fn) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 }
 
-void image::render(const vec2<int>& windowsize) const {
-	glPushMatrix();
-	glLoadIdentity();
+void image::render(const vec2<int>& offset, const double scale) const {
 	glBindTexture(GL_TEXTURE_2D, this->id);
 	glColor3d(255, 255, 255);
 	glEnable(GL_TEXTURE_2D);
-	glOrtho(0, windowsize.x(), windowsize.y(), 0, 0, 1);
+	auto pos00 = offset + pos*scale;
+	auto pos01 = pos00 + vec2<int>(0, this->size.y())*scale;
+	auto pos10 = pos00 + vec2<int>(this->size.x(), 0)*scale;
+	auto pos11 = pos00 + this->size*scale;
 	glBegin(GL_QUADS);
-	glTexCoord2d(0.0, 1.0);
-	glVertex3d(0.0, this->size.y(), 0.0);
-	glTexCoord2d(1.0, 1.0);
-	glVertex3d(this->size.x(), this->size.y(), 0.0);
-	glTexCoord2d(1.0, 0.0);
-	glVertex3d(this->size.x(), 0.0,  0.0);
-	glTexCoord2d(0.0, 0.0);
-	glVertex3d(0.0, 0.0, 0.0);
+	glTexCoord2d(0.0, 1.0); glVertex3d(pos01.x(), pos01.y(), 0);
+	glTexCoord2d(1.0, 1.0); glVertex3d(pos11.x(), pos11.y(), 0);
+	glTexCoord2d(1.0, 0.0); glVertex3d(pos10.x(), pos10.y(), 0);
+	glTexCoord2d(0.0, 0.0); glVertex3d(pos00.x(), pos00.y(), 0);
 	glEnd();
 	glDisable(GL_TEXTURE_2D);
-	glPopMatrix();
 }
 
 bool image::undo() {

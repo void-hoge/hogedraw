@@ -28,11 +28,12 @@ $
 ```
 
 ## USAGE
-- Draw line by dragging the mouse pointer.
-- Draw string where the mouse pointer is by typing on the keyboard.
-
 | key                | action                    |
 |--------------------|---------------------------|
+| leftdrag           | Draw line                 |
+| Key input          | Draw string               |
+| Ctrl + leftdrag    | Move canvas               |
+| Ctrl + wheel       | Zoom in/out               |
 | Ctrl + q           | Quit                      |
 | Ctrl + r           | Draw triangle             |
 | Ctrl + f           | Draw square               |
@@ -45,8 +46,8 @@ $
 | Ctrl + t           | Push canvas to the end    |
 | Ctrl + tab         | Switch to next canvas     |
 | Ctrl + Shift + tab | Switch to previous canvas |
-| Ctrl + s           | Save project as json file |
-| Ctrl + p           | Save canvas as png file   |
+| Ctrl + s           | Save project as json      |
+| Ctrl + p           | Save canvas as png        |
 
 ## .hogedrawrc
 - Configure hogedraw by placing setting file in the HOME directory.
@@ -84,8 +85,9 @@ $
 - `fontpath`: the path to a truetype font
 - `fontsize`: size of text
 
-## OPTION
-- `hogedraw <project file>`: load project from `<project file>`.
+## IMPORT JSON/PNG
+- `hogedraw <project file> <png file1> <png file2> ...`: Load project from `<project file>` and load the png images from `<png file1> <png file2> ...` on the subsequent canvases.
+  - JSON file is loaded as the first canvas regardless of position of command line arguments.
 
 ## Author
 - Mugi Noda(void-hoge)

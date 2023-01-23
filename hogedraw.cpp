@@ -92,13 +92,17 @@ std::string hogedraw::get_time_string() {
 
 void hogedraw::render() const {
 	glMatrixMode(GL_PROJECTION);
-	this->canvases.at(this->current_canvas_idx)->render(this->windowsize);
+	glPushMatrix();
+	glLoadIdentity();
+	glOrtho(0, this->windowsize.x(), this->windowsize.y(), 0, 0, 1);
+	this->canvases.at(this->current_canvas_idx)->render(this->offset, this->scale);
 	if (this->current_line != nullptr) {
-		this->current_line->render(this->windowsize);
+		this->current_line->render(this->offset, this->scale);
 	}
 	if (this->current_text != nullptr) {
-		this->current_text->render(this->windowsize);
+		this->current_text->render(this->offset, this->scale);
 	}
+	glPopMatrix();
 	SDL_GL_SwapWindow(this->window);
 }
 
@@ -163,6 +167,8 @@ vec2<int> hogedraw::get_mouse_pos() {
 
 void hogedraw::switch_canvas(int num) {
 	this->push_current_objects();
+	this->offset = vec2<int>(0,0);
+	this->scale = 1.0;
 	auto tmp = ((int)this->current_canvas_idx+num)%(int)this->canvases.size();
 	if (tmp < 0) {
 		this->current_canvas_idx = tmp + this->canvases.size();
@@ -174,6 +180,8 @@ void hogedraw::switch_canvas(int num) {
 void hogedraw::move_to_back_canvas() {
 	this->push_current_objects();
 	this->current_canvas_idx = this->canvases.size()-1;
+	this->offset = vec2<int>(0,0);
+	this->scale = 1.0;
 }
 
 void hogedraw::handle_mouse_motion(const SDL_Event& event) {
@@ -183,8 +191,12 @@ void hogedraw::handle_mouse_motion(const SDL_Event& event) {
 	}
 	if (event.motion.state & SDL_BUTTON_LMASK) {
 		this->updated = true;
-		if (this->current_line != nullptr) {
-			this->current_line->push_back(vec2<int>(event.motion.x, event.motion.y));
+		const auto mod = SDL_GetModState();
+		if (mod & KMOD_CTRL) {
+			const auto movement = vec2<int>(event.motion.xrel, event.motion.yrel);
+			this->offset += movement;
+		}else if (this->current_line != nullptr) {
+			this->current_line->push_back((vec2<int>(event.motion.x, event.motion.y)-offset)/scale);
 		}
 	}
 }
@@ -192,12 +204,13 @@ void hogedraw::handle_mouse_motion(const SDL_Event& event) {
 void hogedraw::handle_mouse_press(const SDL_Event& event) {
 	if (event.button.button == SDL_BUTTON_LEFT) {
 		this->updated = true;
+		const auto mod = SDL_GetModState();
 		if (this->current_line != nullptr) {
 			this->canvases.at(this->current_canvas_idx)->push_back((object*)this->current_line);
 			this->current_line = nullptr;
 		}
 		this->current_line = new line(this->base, this->linethickness);
-		this->current_line->push_back(vec2<int>(event.button.x, event.button.y));
+		this->current_line->push_back((vec2<int>(event.button.x, event.button.y)-offset)/scale);
 	}
 }
 
@@ -218,7 +231,7 @@ void hogedraw::handle_window_events(const SDL_Event& event) {
 
 void hogedraw::handle_text_input_event(const SDL_Event& event) {
 	this->updated = true;
-	vec2<int> pos = this->get_mouse_pos();
+	vec2<int> pos = (this->get_mouse_pos()-offset)/scale;
 	this->push_current_line();
 	if (this->current_text == nullptr) {
 		this->current_text = new text(this->base, pos, this->ftface, this->fontsize);
@@ -259,7 +272,7 @@ bool hogedraw::handle_key_events(const SDL_Event& event) {
 		}else if (keycode == SDLK_r) {
 			// triangle
 			this->updated = true;
-			auto pos = this->get_mouse_pos();
+			auto pos = (this->get_mouse_pos()-offset)/scale;
 			this->canvases.at(this->current_canvas_idx)
 				->push_back((object*)new regpoly(
 								this->base,
@@ -271,7 +284,7 @@ bool hogedraw::handle_key_events(const SDL_Event& event) {
 		}else if (keycode == SDLK_f) {
 			// rectangle
 			this->updated = true;
-			auto pos = this->get_mouse_pos();
+			auto pos = (this->get_mouse_pos()-offset)/scale;
 			this->canvases.at(this->current_canvas_idx)
 				->push_back((object*)new regpoly(
 								this->base,
@@ -282,7 +295,7 @@ bool hogedraw::handle_key_events(const SDL_Event& event) {
 		}else if (keycode == SDLK_v) {
 			// circle
 			this->updated = true;
-			auto pos = this->get_mouse_pos();
+			auto pos = (this->get_mouse_pos()-offset)/scale;
 			this->canvases.at(this->current_canvas_idx)
 				->push_back((object*)new regpoly(
 								this->base,
@@ -292,7 +305,6 @@ bool hogedraw::handle_key_events(const SDL_Event& event) {
 								this->circlefill,
 								this->circlethickness));
 		}
-		
 	}else if ((mod & ctrl_mask) && (mod & shift_mask) && !(mod & alt_mask)) {
 		if (keycode == SDLK_TAB) {
 			this->updated = true;
@@ -333,6 +345,29 @@ bool hogedraw::handle_key_events(const SDL_Event& event) {
 	return true;
 }
 
+void hogedraw::handle_wheel_event(const SDL_Event& event) {
+	this->updated = true;
+	auto mod = SDL_GetModState();
+	auto worldpos = (this->get_mouse_pos()-this->offset)/this->scale;
+	auto baseoffset = this->offset-worldpos*(1.0-this->scale);
+	if (mod & KMOD_CTRL) {
+		if (event.wheel.y > 0) {
+			// zoom in
+			this->scale *= 1.1f;
+			if (this->scale > maxscale) {
+				this->scale = maxscale;
+			}
+		}else if (event.wheel.y < 0) {
+			// zoom out
+			this->scale *= 0.9f;
+			if (this->scale < minscale) {
+				this->scale = minscale;
+			}
+		}
+		this->offset = baseoffset+worldpos*(1.0-this->scale);
+	}
+}
+
 hogedraw::hogedraw() {
 	this->colors.at(0) = color_t(0, 0, 0);
 	this->colors.at(1) = color_t(255, 255, 255);
@@ -344,6 +379,8 @@ hogedraw::hogedraw() {
 	this->current_canvas_idx = 0;
 	this->current_line = nullptr;
 	this->current_text = nullptr;
+	this->offset = vec2<int>(0,0);
+	this->scale = 1.0;
 	this->linethickness = 2;
 	this->trianglefill = false;
 	this->trianglesize = 50;
@@ -365,6 +402,8 @@ hogedraw::hogedraw(const option_t& option) {
 	this->current_canvas_idx = 0;
 	this->current_line = nullptr;
 	this->current_text = nullptr;
+	this->offset = vec2<int>(0,0);
+	this->scale = 1.0;
 }
 
 hogedraw::hogedraw(const nlohmann::json& json, const option_t& option) {
@@ -380,6 +419,8 @@ hogedraw::hogedraw(const nlohmann::json& json, const option_t& option) {
 	this->current_canvas_idx = 0;
 	this->current_line = nullptr;
 	this->current_text = nullptr;
+	this->offset = vec2<int>(0,0);
+	this->scale = 1.0;
 }
 
 hogedraw::hogedraw(const option_t& option, const std::vector<std::string>& filenames) {
@@ -395,6 +436,8 @@ hogedraw::hogedraw(const option_t& option, const std::vector<std::string>& filen
 	this->current_canvas_idx = 0;
 	this->current_line = nullptr;
 	this->current_text = nullptr;
+	this->offset = vec2<int>(0,0);
+	this->scale = 1.0;
 }
 
 hogedraw::hogedraw(const nlohmann::json& json, const option_t& option, const std::vector<std::string>& filenames) {
@@ -413,6 +456,8 @@ hogedraw::hogedraw(const nlohmann::json& json, const option_t& option, const std
 	this->current_canvas_idx = 0;
 	this->current_line = nullptr;
 	this->current_text = nullptr;
+	this->offset = vec2<int>(0,0);
+	this->scale = 1.0;
 }
 
 hogedraw::~hogedraw() {
@@ -433,6 +478,7 @@ hogedraw::~hogedraw() {
 void hogedraw::mainloop() {
 	SDL_Event event;
 	SDL_StartTextInput();
+	int count = 0;
 	while (SDL_WaitEvent(&event)) {
 		if (event.type == SDL_QUIT) {
 			return;
@@ -446,6 +492,8 @@ void hogedraw::mainloop() {
 			this->handle_window_events(event);
 		}else if (event.type == SDL_TEXTINPUT) {
 			this->handle_text_input_event(event);
+		}else if (event.type == SDL_MOUSEWHEEL) {
+			this->handle_wheel_event(event);
 		}else if (event.type == SDL_KEYDOWN) {
 			if (!this->handle_key_events(event)) {
 				return;

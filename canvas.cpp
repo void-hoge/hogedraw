@@ -17,14 +17,14 @@ canvas::canvas(const nlohmann::json& json, FTPixmapFont* f) {
 
 canvas::~canvas() {}
 
-void canvas::render(vec2<int>windowsize) const {
+void canvas::render(const vec2<int>& offset, const double scale) const {
 	glClearColor((float)this->background.x()/255,
 				 (float)this->background.y()/255,
 				 (float)this->background.z()/255,
 				 0.0);
 	glClear(GL_COLOR_BUFFER_BIT);
 	for (auto obj: this->objects) {
-		obj->render(windowsize);
+		obj->render(offset, scale);
 	}
 }
 
