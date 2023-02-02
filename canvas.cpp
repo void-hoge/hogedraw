@@ -1,5 +1,4 @@
 #include "canvas.hpp"
-#include "util.hpp"
 #include <iostream>
 
 canvas::canvas(color_t bg): background(bg) {}

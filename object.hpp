@@ -79,7 +79,6 @@ class image : protected object {
 private:
 	vec2<int> pos;
 	vec2<int> size;
-	int format;
 	std::string filename;
 	unsigned int id;
 public:

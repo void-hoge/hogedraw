@@ -1,5 +1,4 @@
 #include "hogedraw.hpp"
-#include "util.hpp"
 
 #include <iostream>
 #include <iomanip>

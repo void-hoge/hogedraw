@@ -1,6 +1,5 @@
 #include "vec.hpp"
 #include "object.hpp"
-#include "util.hpp"
 
 #include <cmath>
 #include <iostream>
@@ -190,33 +189,20 @@ image::image(const std::string& fn, const vec2<int>& p) {
 }
 
 void image::loadimage(const std::string& fn) {
-	int channels;
-	unsigned char* image = SOIL_load_image(
-		fn.c_str(),
-		&(this->size.x()),
-		&(this->size.y()),
-		&channels,
-		SOIL_LOAD_AUTO);
-	if (image == nullptr) {
+    this->id = SOIL_load_OGL_texture(fn.c_str(), SOIL_LOAD_RGBA, SOIL_CREATE_NEW_ID, 0);
+    if (this->id == 0){
 		std::string err = "Failed to load \"" + fn + "\".";
 		throw std::invalid_argument(err);
-	}
-	if (channels == 4) {
-		this->format = GL_RGBA;
-	}else {
-		this->format = GL_RGB;
-	}
-	glGenTextures(1, &(this->id));
-	glBindTexture(GL_TEXTURE_2D, this->id);
-	glTexImage2D(
-		GL_TEXTURE_2D,
-		0, this->format,
-		this->size.x(), this->size.y(),
-		0, this->format,
-		GL_UNSIGNED_BYTE, image);
-	SOIL_free_image_data(image);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    }
+    glBindTexture(GL_TEXTURE_2D, this->id);
+
+    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &(this->size.x()));
+    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &(this->size.y()));
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 }
 
 void image::render(const vec2<int>& offset, const double scale) const {
