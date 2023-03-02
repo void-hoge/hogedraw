@@ -15,6 +15,7 @@ public:
 	std::string fontpath;
 	int fontsize;
 	int linethickness;
+	int eraserthickness;
 	bool trianglefill;
 	int trianglesize;
 	int trianglethickness;

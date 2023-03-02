@@ -7,6 +7,7 @@ void option_t::init() {
 	this->fontpath = "/usr/share/fonts/truetype/freefont/FreeMono.ttf";
 	this->fontsize = 50;
 	this->linethickness = 2;
+	this->eraserthickness = 30;
 	this->trianglefill = false;
 	this->trianglesize = 50;
 	this->trianglethickness = 2;
@@ -40,6 +41,9 @@ option_t::option_t(std::vector<std::string>& lines) {
 			}else if (lex.check(std::regex("^linethickness:"))) {
 				lex.advance();
 				this->linethickness = parseint(lex);
+			}else if (lex.check(std::regex("^eraserthickness:"))) {
+				lex.advance();
+				this->eraserthickness = parseint(lex);
 			}else if (lex.check(std::regex("^circlefill:"))) {
 				lex.advance();
 				this->circlefill = parsebool(lex);
@@ -86,6 +90,8 @@ void option_t::dump(std::ostream& ost) {
 		<< "color3" << this->colors.at(3) << std::endl
 		<< "color4" << this->colors.at(4) << std::endl
 		<< "color5" << this->colors.at(5) << std::endl
+		<< "linethickness" << this->linethickness << std::endl
+		<< "eraserthickness" << this->eraserthickness << std::endl
 		<< "fontpath:" << this->fontpath << std::endl
 		<< "fontsize:" << this->fontsize << std::endl
 		<< "trianglefill:" << this->trianglefill << std::endl

@@ -28,26 +28,27 @@ $
 ```
 
 ## USAGE
-| key                | action                    |
-|--------------------|---------------------------|
-| leftdrag           | Draw line                 |
-| Key input          | Draw string               |
-| Ctrl + leftdrag    | Move canvas               |
-| Ctrl + wheel       | Zoom in/out               |
-| Ctrl + q           | Quit                      |
-| Ctrl + r           | Draw triangle             |
-| Ctrl + f           | Draw square               |
-| Ctrl + v           | Draw circle               |
-| F1                 | Set to use color 1        |
-| F2                 | Set to use color 2        |
-| F3                 | Set to use color 3        |
-| F4                 | Set to use color 4        |
-| F5                 | Set to use color 5        |
-| Ctrl + t           | Push canvas to the end    |
-| Ctrl + tab         | Switch to next canvas     |
-| Ctrl + Shift + tab | Switch to previous canvas |
-| Ctrl + s           | Save project as json      |
-| Ctrl + p           | Save canvas as png        |
+| key                | action                              |
+|--------------------|-------------------------------------|
+| leftdrag           | Draw line                           |
+| rightdraw          | Draw background color line (eraser) |
+| Key input          | Draw string                         |
+| Ctrl + leftdrag    | Move canvas                         |
+| Ctrl + wheel       | Zoom in/out                         |
+| Ctrl + q           | Quit                                |
+| Ctrl + r           | Draw triangle                       |
+| Ctrl + f           | Draw square                         |
+| Ctrl + v           | Draw circle                         |
+| F1                 | Set to use color 1                  |
+| F2                 | Set to use color 2                  |
+| F3                 | Set to use color 3                  |
+| F4                 | Set to use color 4                  |
+| F5                 | Set to use color 5                  |
+| Ctrl + t           | Push canvas to the end              |
+| Ctrl + tab         | Switch to next canvas               |
+| Ctrl + Shift + tab | Switch to previous canvas           |
+| Ctrl + s           | Save project as json                |
+| Ctrl + p           | Save canvas as png                  |
 
 ## .hogedrawrc
 - Configure hogedraw by placing setting file in the HOME directory.
@@ -62,7 +63,8 @@ color2: (0,0,255)
 color3: (0,255,0)
 color4: (255,0,0)
 color5: (255,255,0)
-linethickness: 2
+linethickness: 3
+eraserthickness: 50
 circlefill: false
 circlesize: 50
 circlethickness: 2
@@ -79,6 +81,7 @@ $
 - `color0`: background color template
 - `color(1|2|3|4|5)`: color templates
 - `linethickness`: thickness of line
+- `eraserthickness`: thickness of eraser
 - `(triangle|square|circle)thickness`: thickness of the shapes outline
 - `(triangle|square|circle)fill`: whether to fill the shapes
 - `(triangle|square|circle)size`: size(distance between the pointer and vertices) of the shapes

@@ -39,6 +39,7 @@ private:
 	color_t base;
 	int fontsize;
 	int linethickness;
+	int eraserthickness;
 	bool trianglefill;
 	int trianglesize;
 	int trianglethickness;

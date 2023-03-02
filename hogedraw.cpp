@@ -47,6 +47,7 @@ void hogedraw::init_options(const option_t& option) {
 	this->circlesize = option.circlesize;
 	this->circlethickness = option.circlethickness;
 	this->colors = option.colors;
+	this->eraserthickness = option.eraserthickness;
 	this->background = this->colors.at(0);
 	this->base = this->colors.at(1);
 	this->updated = true;
@@ -188,7 +189,7 @@ void hogedraw::handle_mouse_motion(const SDL_Event& event) {
 		this->canvases.at(this->current_canvas_idx)->push_back((object*)this->current_text);
 		this->current_text = nullptr;
 	}
-	if (event.motion.state & SDL_BUTTON_LMASK) {
+	if (event.motion.state & (SDL_BUTTON_LMASK | SDL_BUTTON_RMASK)) {
 		this->updated = true;
 		const auto mod = SDL_GetModState();
 		if (mod & KMOD_CTRL) {
@@ -210,11 +211,22 @@ void hogedraw::handle_mouse_press(const SDL_Event& event) {
 		}
 		this->current_line = new line(this->base, this->linethickness);
 		this->current_line->push_back((vec2<int>(event.button.x, event.button.y)-offset)/scale);
+	}else if (event.button.button == SDL_BUTTON_RIGHT){
+		this->updated = true;
+		const auto mod = SDL_GetModState();
+		if (this->current_line != nullptr) {
+			this->canvases.at(this->current_canvas_idx)->push_back((object*)this->current_line);
+			this->current_line = nullptr;
+		}
+		this->current_line = new line(this->background, this->eraserthickness);
+		this->current_line->push_back((vec2<int>(event.button.x, event.button.y)-offset)/scale);
 	}
 }
 
 void hogedraw::handle_mouse_release(const SDL_Event& event) {
 	if (event.button.button == SDL_BUTTON_LEFT) {
+		this->push_current_line();
+	}else if (event.button.button == SDL_BUTTON_RIGHT) {
 		this->push_current_line();
 	}
 }
@@ -390,6 +402,7 @@ hogedraw::hogedraw() {
 	this->circlefill = false;
 	this->circlesize = 50;
 	this->circlethickness = 2;
+	this->eraserthickness = 30;
 	this->fontsize = 50;
 }
 

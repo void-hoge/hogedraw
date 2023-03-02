@@ -4,7 +4,8 @@ color2: (0,0,255)
 color3: (0,255,0)
 color4: (255,0,0)
 color5: (255,255,0)
-linethickness: 2
+linethickness: 3
+eraserthickness: 50
 circlefill: false
 circlesize: 50
 circlethickness: 2
